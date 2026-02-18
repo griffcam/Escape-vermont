@@ -245,13 +245,28 @@ select{cursor:pointer} select option{background:var(--s2)}
 .empty{padding:20px 15px;text-align:center;font-family:'DM Mono',monospace;font-size:.68rem;color:var(--t3)}
 .notes-ta{width:100%;background:var(--s2);border:none;border-top:1px solid var(--b1);color:var(--t1);font-family:'DM Mono',monospace;font-size:.78rem;padding:13px 15px;resize:none;height:115px;outline:none;line-height:1.6}
 .notes-ta::placeholder{color:var(--t3)}
+
+/* ═══ TO-DOS ═══ */
+.todo-input-row{display:flex;gap:7px;padding:11px 15px;border-bottom:1px solid var(--b1)}
+.todo-input-row input{flex:1;padding:6px 9px}
+.todo-item{display:flex;align-items:center;gap:9px;padding:8px 15px;border-bottom:1px solid var(--b1);transition:background .12s}
+.todo-item:last-child{border-bottom:none}
+.todo-item:hover{background:var(--s2)}
+.todo-item.tdone{opacity:.35}
+.todo-check{width:15px;height:15px;border:1.5px solid var(--b2);border-radius:2px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.todo-item.tdone .todo-check{background:var(--lime);border-color:var(--lime)}
+.todo-check::after{content:'';width:4px;height:7px;border-right:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(45deg) translate(-1px,-1px);opacity:0}
+.todo-item.tdone .todo-check::after{opacity:1}
+.todo-text{flex:1;font-size:.82rem;cursor:pointer}
+.todo-item.tdone .todo-text{text-decoration:line-through;color:var(--t3)}
+
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <div class="nav-brand">
-    <div class="nav-title">Operation: Vermont</div>
+    <div class="nav-title">Operation: Escape Vermont</div>
     <div class="nav-sub">Transfer Season 2026</div>
   </div>
   <div class="nav-tabs">
@@ -297,6 +312,15 @@ select{cursor:pointer} select option{background:var(--s2)}
       </div>
     </div>
     <div class="card gfull">
+      <div class="ch"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
+      <div class="todo-input-row">
+        <input type="text" id="todo-input" placeholder="Add a task… e.g. Read Leg & Reg pp. 269-86" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="addTodo()">Add</button>
+      </div>
+      <div id="todo-list"></div>
+      <div id="todo-empty" class="empty">No tasks. Add something you need to do.</div>
+    </div>
+    <div class="card gfull">
       <div class="ch"><div class="ct">Notes</div></div>
       <textarea class="notes-ta" id="notes-ta" placeholder="Brain dump..."></textarea>
     </div>
@@ -335,7 +359,9 @@ select{cursor:pointer} select option{background:var(--s2)}
     <div class="log-card">
       <div class="ch"><div class="ct">Log Today</div><div class="badge" id="today-badge">No entry</div></div>
       <div class="log-body">
-        <div class="lf-label">Did you drink today?</div>
+        <div class="lf-label">Date</div>
+        <div style="margin-bottom:10px"><input type="date" id="sob-date" style="padding:6px 9px;width:180px"></div>
+        <div class="lf-label">Did you drink?</div>
         <div class="rg" id="drank-rg">
           <div class="ro" data-v="no" onclick="pickDrank('no')">🧊 Stayed sober</div>
           <div class="ro" data-v="yes" onclick="pickDrank('yes')">🍷 Yeah I drank</div>
@@ -672,7 +698,7 @@ function go(id) {
   renderAll();
 }
 
-function renderAll() { renderDash(); renderAcad(); renderSob(); renderWork(); renderJobs(); renderNav(); }
+function renderAll() { renderDash(); renderAcad(); renderSob(); renderWork(); renderJobs(); renderTodos(); renderNav(); }
 
 function renderNav() {
   document.getElementById('ns-sob').textContent = sobDays();
@@ -830,11 +856,18 @@ const toB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res
 function renderSob(){
   document.getElementById('sob-num').textContent=sobDays();
   document.getElementById('sob-since').textContent=S.soberSince?fmtD(S.soberSince):'not set';
-  const tl=S.logs[today()];
-  document.getElementById('today-badge').textContent=tl?'✓ Logged':'No entry';
+  // set date picker to today if not already set
+  const dateEl=document.getElementById('sob-date');
+  if(!dateEl.value) dateEl.value=today();
+  loadLogForDate(dateEl.value);
+  renderCal();renderLogHist();
+}
+function loadLogForDate(d){
+  const tl=S.logs[d];
+  const isToday=d===today();
+  document.getElementById('today-badge').textContent=tl?'✓ Logged':(isToday?'No entry':'No entry for '+fmtD(d));
   if(tl){ui.drank=tl.drank?'yes':'no';ui.who=tl.who;ui.feel=tl.feel;apDrank(ui.drank);apWho(ui.who);apFeel(ui.feel);document.getElementById('sob-note').value=tl.note||'';}
   else{ui.drank=null;ui.who=null;ui.feel=null;document.querySelectorAll('#drank-rg .ro,#who-rg .ro,#feel-rg .ro').forEach(e=>e.className='ro');document.getElementById('who-sec').style.display='none';document.getElementById('sob-note').value='';}
-  renderCal();renderLogHist();
 }
 function apDrank(v){document.querySelectorAll('#drank-rg .ro').forEach(e=>{e.className='ro';if(e.dataset.v===v)e.classList.add(v==='no'?'sno':'syes');});document.getElementById('who-sec').style.display=v==='yes'?'block':'none';}
 function apWho(v){document.querySelectorAll('#who-rg .ro').forEach(e=>{e.className='ro';if(e.dataset.v===v)e.classList.add('s'+v);});}
@@ -845,7 +878,8 @@ function pickFeel(v){ui.feel=v;apFeel(v);}
 function saveLog(){
   if(!ui.drank){alert('Select whether you drank today.');return;}
   const drank=ui.drank==='yes';
-  S.logs[today()]={drank,who:drank?ui.who:null,feel:ui.feel,note:document.getElementById('sob-note').value.trim()};
+  const logDate=document.getElementById('sob-date').value||today();
+  S.logs[logDate]={drank,who:drank?ui.who:null,feel:ui.feel,note:document.getElementById('sob-note').value.trim()};
   if(drank&&ui.feel==='bad'&&confirm('You drank and feel bad about it — reset streak to today?'))S.soberSince=today();
   save();renderSob();renderDash();renderNav();
 }
@@ -944,11 +978,56 @@ const openM=id=>document.getElementById(id).classList.add('open');
 const closeM=id=>document.getElementById(id).classList.remove('open');
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 document.getElementById('notes-ta').addEventListener('input',function(){S.notes=this.value;save();});
+document.getElementById('sob-date').addEventListener('change',function(){loadLogForDate(this.value);});
 
 // ═══════════════════════════════════════════════════════
 //  UI STATE
 // ═══════════════════════════════════════════════════════
 let ui={drank:null,who:null,feel:null,itemClsId:null,itemType:null,sylClsId:null};
+
+
+// ═══════════════════════════════════════════════════════
+//  TO-DOS
+// ═══════════════════════════════════════════════════════
+function renderTodos() {
+  const todos = S.todos || [];
+  const listEl = document.getElementById('todo-list');
+  const emEl = document.getElementById('todo-empty');
+  // sort: undone first, done at bottom
+  const sorted = [...todos].sort((a,b) => a.done===b.done ? 0 : a.done ? 1 : -1);
+  if (!todos.length) { emEl.style.display='block'; listEl.innerHTML=''; return; }
+  emEl.style.display='none';
+  listEl.innerHTML = sorted.map(t => `
+    <div class="todo-item ${t.done?'tdone':''}">
+      <div class="todo-check" onclick="toggleTodo(${t.id})"></div>
+      <span class="todo-text" onclick="toggleTodo(${t.id})">${esc(t.text)}</span>
+      <div class="btn-icon" onclick="delTodo(${t.id})">✕</div>
+    </div>`).join('');
+}
+
+function addTodo() {
+  const input = document.getElementById('todo-input');
+  const text = input.value.trim(); if (!text) return;
+  if (!S.todos) S.todos = [];
+  S.todos.push({ id: Date.now(), text, done: false });
+  input.value = '';
+  save(); renderTodos();
+}
+
+function toggleTodo(id) {
+  S.todos = (S.todos||[]).map(t => t.id===id ? {...t, done:!t.done} : t);
+  save(); renderTodos();
+}
+
+function delTodo(id) {
+  S.todos = (S.todos||[]).filter(t => t.id!==id);
+  save(); renderTodos();
+}
+
+function clearDoneTodos() {
+  S.todos = (S.todos||[]).filter(t => !t.done);
+  save(); renderTodos();
+}
 
 // ═══════════════════════════════════════════════════════
 //  INIT
