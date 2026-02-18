@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation: Get Out of Vermont</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080808; --s1:#111; --s2:#181818; --s3:#222; --b1:#2a2a2a; --b2:#363636;
+  --lime:#c8f55a; --lime-d:rgba(200,245,90,.1); --lime-d2:rgba(200,245,90,.06);
+  --gold:#f5c84a; --gold-d:rgba(245,200,74,.1);
+  --sky:#5ac8f5; --sky-d:rgba(90,200,245,.1);
+  --red:#f55a5a; --red-d:rgba(245,90,90,.1);
+  --pur:#c47cf5; --pur-d:rgba(196,124,245,.1);
+  --t1:#e4e4e4; --t2:#888; --t3:#444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ── SYNC STATUS ── */
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;transition:background .3s}
+.sync-ok{background:var(--lime)} .sync-saving{background:var(--gold)} .sync-err{background:var(--red)}
+.sync-lbl{font-family:'DM Mono',monospace;font-size:.5rem;color:var(--t3);letter-spacing:.08em}
+
+/* ── NAV ── */
+.nav{background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:stretch;position:sticky;top:0;z-index:200;overflow-x:auto}
+.nav-brand{padding:0 18px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--b1);min-width:170px;flex-shrink:0}
+.nav-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.08em;color:var(--lime);line-height:1.1}
+.nav-sub{font-family:'DM Mono',monospace;font-size:.5rem;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.nav-tabs{display:flex}
+.nav-tab{padding:0 16px;display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);cursor:pointer;border-right:1px solid var(--b1);border-bottom:2px solid transparent;transition:all .15s;user-select:none;white-space:nowrap;height:54px;flex-shrink:0}
+.nav-tab:hover{color:var(--t2);background:var(--s2)}
+.nav-tab.active{color:var(--lime);border-bottom-color:var(--lime);background:var(--lime-d2)}
+.nav-stats{display:flex;margin-left:auto;flex-shrink:0}
+.ns{padding:0 12px;border-left:1px solid var(--b1);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'DM Mono',monospace}
+.ns .v{font-size:1rem;font-weight:500;line-height:1}
+.ns .l{font-size:.5rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.ns-sync{padding:0 12px;border-left:1px solid var(--b1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+
+/* ── PAGES ── */
+.page{display:none;max-width:960px;margin:0 auto;padding:20px 14px 60px}
+.page.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:5px;overflow:hidden;margin-bottom:14px}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--b1);flex-wrap:wrap;gap:7px}
+.ct{font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:.1em;color:var(--t2)}
+.badge{font-family:'DM Mono',monospace;font-size:.6rem;background:var(--s2);border:1px solid var(--b1);padding:3px 8px;border-radius:3px;color:var(--t3)}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;cursor:pointer;border:none;border-radius:4px;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.82}
+.btn-lime{background:var(--lime);color:var(--bg);padding:6px 13px;font-size:.82rem}
+.btn-sky{background:var(--sky-d);border:1px solid var(--sky);color:var(--sky);padding:5px 10px;font-size:.78rem}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--b1);padding:5px 10px;font-family:'DM Mono',monospace;font-size:.62rem;border-radius:3px;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{color:var(--t1);border-color:var(--t2)}
+.btn-icon{background:var(--s2);border:1px solid var(--b1);color:var(--t2);width:25px;height:25px;border-radius:3px;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.btn-icon:hover{background:var(--s3);color:var(--t1)}
+.btn-danger{background:var(--red-d);border:1px solid var(--red);color:var(--red);padding:5px 10px;font-family:'DM Mono',monospace;font-size:.62rem;border-radius:3px;cursor:pointer}
+
+/* ── INPUTS ── */
+input[type=text],input[type=date],input[type=datetime-local],select,textarea{background:var(--s2);border:1px solid var(--b1);color:var(--t1);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:.8rem;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--lime)}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+select{cursor:pointer} select option{background:var(--s2)}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gfull{grid-column:1/-1}
+@media(max-width:640px){.g2{grid-template-columns:1fr}}
+
+/* ── PROGRESS ── */
+.pbar-row{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3);margin-bottom:5px}
+.pbar{height:3px;background:var(--s2);border-radius:2px}
+.pbar-fill{height:100%;background:var(--lime);border-radius:2px;transition:width .4s}
+
+/* ═══ DASHBOARD ═══ */
+.cd-item{display:flex;align-items:center;padding:9px 15px;border-bottom:1px solid var(--b1);gap:12px}
+.cd-item:last-child{border-bottom:none}
+.cd-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;min-width:48px;text-align:right}
+.cd-num.urg{color:var(--red)} .cd-num.soon{color:var(--gold)} .cd-num.ok{color:var(--lime)} .cd-num.far{color:var(--t3)}
+.cd-info{flex:1} .cd-name{font-size:.83rem;font-weight:500}
+.cd-sub{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t2);margin-top:2px}
+.type-badge{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 6px;border-radius:2px;text-transform:uppercase;white-space:nowrap}
+.tb-exam{background:var(--red-d);color:var(--red)} .tb-paper{background:var(--gold-d);color:var(--gold)}
+.tb-assignment{background:var(--sky-d);color:var(--sky)} .tb-transfer{background:var(--lime-d);color:var(--lime)}
+.cdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+/* milestones */
+.mi{display:flex;align-items:center;gap:10px;padding:8px 15px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .12s}
+.mi:last-child{border-bottom:none} .mi:hover{background:var(--s2)}
+.mi.mdone{opacity:.4} .mi.mnext .mdot{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-d)}
+.mdot{width:9px;height:9px;border-radius:50%;border:2px solid var(--b2);flex-shrink:0;transition:all .2s}
+.mi.mdone .mdot{background:var(--lime);border-color:var(--lime)}
+.mname{font-size:.8rem;flex:1} .mi.mdone .mname{text-decoration:line-through;color:var(--t3)}
+.mdate{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3)} .mi.mnext .mdate{color:var(--gold)}
+.sub-count{font-family:'DM Mono',monospace;font-size:.56rem;color:var(--t3);margin-left:5px}
+.subs-wrap{background:var(--s2);border-top:1px solid var(--b1)}
+.sub-item{display:flex;align-items:center;gap:9px;padding:7px 15px 7px 34px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .12s}
+.sub-item:last-child{border-bottom:none} .sub-item:hover{background:var(--s3)} .sub-item.sdone{opacity:.38}
+.sbox{width:13px;height:13px;border:1.5px solid var(--b2);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.sub-item.sdone .sbox{background:var(--lime);border-color:var(--lime)}
+.schk{width:4px;height:7px;border-right:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(45deg) translate(-1px,-1px);opacity:0}
+.sub-item.sdone .schk{opacity:1}
+.sname{font-size:.77rem} .sub-item.sdone .sname{text-decoration:line-through}
+
+/* ═══ ACADEMICS ═══ */
+.cls-card{background:var(--s1);border:1px solid var(--b1);border-radius:5px;margin-bottom:12px;overflow:hidden}
+.cls-hdr{display:flex;align-items:center;padding:11px 15px;gap:9px;cursor:pointer;user-select:none;transition:background .12s}
+.cls-hdr:hover{background:var(--s2)}
+.cls-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.cls-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.08em;flex:1}
+.cls-pend{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3)}
+.cls-chev{font-size:.62rem;color:var(--t3);transition:transform .18s;margin-left:4px}
+.cls-card.open .cls-chev{transform:rotate(90deg)}
+.cls-body{display:none;border-top:1px solid var(--b1)} .cls-card.open .cls-body{display:block}
+.ai{display:flex;align-items:flex-start;gap:9px;padding:8px 15px;border-bottom:1px solid var(--b1);transition:background .12s}
+.ai:last-child{border-bottom:none} .ai:hover{background:var(--s2)} .ai.adone{opacity:.35}
+.acheck{width:15px;height:15px;border:1.5px solid var(--b2);border-radius:2px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ai.adone .acheck{background:var(--lime);border-color:var(--lime)}
+.acheck::after{content:'';width:4px;height:7px;border-right:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(45deg) translate(-1px,-1px);opacity:0}
+.ai.adone .acheck::after{opacity:1}
+.ainfo{flex:1} .aname{font-size:.8rem;cursor:pointer} .ai.adone .aname{text-decoration:line-through}
+.ameta{display:flex;gap:7px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.adue{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t2)}
+.adue.ov{color:var(--red)} .adue.td{color:var(--gold)} .adue.sn{color:var(--lime)}
+
+/* ═══ SOBRIETY ═══ */
+.sob-top{display:grid;grid-template-columns:auto 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:520px){.sob-top{grid-template-columns:1fr}}
+.streak-card{background:var(--s1);border:1px solid var(--b1);border-radius:5px;padding:18px 20px;text-align:center;min-width:148px}
+.streak-num{font-family:'Bebas Neue',sans-serif;font-size:4.8rem;line-height:1;color:var(--gold)}
+.streak-lbl{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.streak-since{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3);margin-top:9px}
+.streak-since span{color:var(--t2)}
+.streak-btns{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.log-card{background:var(--s1);border:1px solid var(--b1);border-radius:5px;overflow:hidden}
+.log-body{padding:14px}
+.rg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ro{display:flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid var(--b1);border-radius:3px;cursor:pointer;font-family:'DM Mono',monospace;font-size:.68rem;transition:all .15s;user-select:none}
+.ro:hover{border-color:var(--t2)}
+.ro.sno{border-color:var(--sky);background:var(--sky-d);color:var(--sky)}
+.ro.syes{border-color:var(--pur);background:var(--pur-d);color:var(--pur)}
+.ro.ssolo{border-color:var(--gold);background:var(--gold-d);color:var(--gold)}
+.ro.sfriends{border-color:var(--lime);background:var(--lime-d);color:var(--lime)}
+.ro.smixed{border-color:var(--t2);background:var(--s2);color:var(--t1)}
+.ro.sfeel{border-color:var(--lime);background:var(--lime-d);color:var(--lime)}
+.ro.sbad{border-color:var(--red);background:var(--red-d);color:var(--red)}
+.lf-label{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px}
+.sob-note{width:100%;padding:8px 9px;resize:vertical;min-height:58px;line-height:1.5;margin-top:8px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:11px}
+.cal-lbl{font-family:'DM Mono',monospace;font-size:.5rem;color:var(--t3);text-align:center;padding-bottom:4px;text-transform:uppercase}
+.cal-cell{aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.58rem;transition:all .15s}
+.cal-cell.hlog{cursor:pointer} .cal-cell.hlog:hover{transform:scale(1.08)}
+.csob{background:rgba(90,200,245,.18);color:var(--sky)} .cok{background:rgba(196,124,245,.18);color:var(--pur)}
+.cmeh{background:rgba(245,200,74,.18);color:var(--gold)} .cbad{background:rgba(245,90,90,.22);color:var(--red)}
+.ctoday{box-shadow:0 0 0 1.5px var(--lime)}
+.lentry{padding:10px 15px;border-bottom:1px solid var(--b1)} .lentry:last-child{border-bottom:none}
+.lentry-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ldate{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--t2)}
+.ltb{font-family:'DM Mono',monospace;font-size:.58rem;padding:2px 6px;border-radius:2px}
+.lt-sob{background:var(--sky-d);color:var(--sky)} .lt-drank{background:var(--pur-d);color:var(--pur)}
+.lf-good{background:var(--lime-d);color:var(--lime)} .lf-fine{background:var(--sky-d);color:var(--sky)}
+.lf-meh{background:var(--gold-d);color:var(--gold)} .lf-bad{background:var(--red-d);color:var(--red)}
+.lnote{font-size:.78rem;color:var(--t2);font-style:italic;margin-top:3px;line-height:1.4}
+
+/* ═══ WORKOUTS ═══ */
+.wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:11px 14px}
+.wlbl{font-family:'DM Mono',monospace;font-size:.5rem;color:var(--t3);text-align:center;padding-bottom:4px;text-transform:uppercase}
+.wcell{aspect-ratio:1;border-radius:3px;background:var(--s2);border:1px solid var(--b1);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.52rem;color:var(--t3);transition:all .15s}
+.wcell:hover{border-color:var(--sky)} .wcell.wd{background:var(--sky-d);border-color:var(--sky);color:var(--sky)}
+.wcell.wt{box-shadow:0 0 0 1.5px var(--sky)}
+.wstats{display:flex;justify-content:space-around;padding:0 14px 12px;font-family:'DM Mono',monospace;font-size:.67rem;color:var(--t3)}
+.wstats span{color:var(--t1)}
+
+/* ═══ JOBS ═══ */
+.job-stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:12px 15px;border-bottom:1px solid var(--b1)}
+@media(max-width:600px){.job-stats-row{grid-template-columns:repeat(3,1fr)}}
+.jstat{text-align:center;padding:8px 4px;border-radius:4px;border:1px solid var(--b1)}
+.jstat .jsn{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1}
+.jstat .jsl{font-family:'DM Mono',monospace;font-size:.52rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.st-none .jsn{color:var(--t3)}
+.st-submitted{border-color:var(--sky);background:var(--sky-d)} .st-submitted .jsn{color:var(--sky)}
+.st-interviewing{border-color:var(--gold);background:var(--gold-d)} .st-interviewing .jsn{color:var(--gold)}
+.st-rejected{border-color:var(--red);background:var(--red-d)} .st-rejected .jsn{color:var(--red)}
+.st-offer{border-color:var(--lime);background:var(--lime-d)} .st-offer .jsn{color:var(--lime)}
+.filter-bar{display:flex;gap:6px;padding:10px 15px;border-bottom:1px solid var(--b1);flex-wrap:wrap;align-items:center}
+.filter-chip{font-family:'DM Mono',monospace;font-size:.6rem;padding:4px 10px;border:1px solid var(--b1);border-radius:20px;cursor:pointer;transition:all .15s;color:var(--t3);user-select:none}
+.filter-chip:hover{border-color:var(--t2);color:var(--t2)} .filter-chip.active{border-color:var(--lime);background:var(--lime-d);color:var(--lime)}
+.filter-search{flex:1;min-width:120px;padding:5px 9px;border-radius:20px;font-size:.75rem}
+.job-row{display:flex;align-items:flex-start;gap:12px;padding:11px 15px;border-bottom:1px solid var(--b1);transition:background .12s;cursor:pointer}
+.job-row:last-child{border-bottom:none} .job-row:hover{background:var(--s2)} .job-row.jdead{opacity:.35}
+.job-status-pill{font-family:'DM Mono',monospace;font-size:.58rem;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:1px;border:1px solid transparent}
+.sp-not-started{color:var(--t3);border-color:var(--b2);background:var(--s2)}
+.sp-submitted{color:var(--sky);border-color:var(--sky);background:var(--sky-d)}
+.sp-interviewing{color:var(--gold);border-color:var(--gold);background:var(--gold-d)}
+.sp-rejected{color:var(--red);border-color:var(--red);background:var(--red-d)}
+.sp-offer{color:var(--lime);border-color:var(--lime);background:var(--lime-d)}
+.job-main{flex:1;min-width:0}
+.job-employer{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job-row.jdead .job-employer{text-decoration:line-through}
+.job-meta{display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.job-type-badge{font-family:'DM Mono',monospace;font-size:.56rem;padding:2px 6px;border-radius:2px;text-transform:uppercase;white-space:nowrap}
+.jt-biglaw{background:rgba(196,124,245,.15);color:var(--pur)} .jt-boutique{background:rgba(90,200,245,.12);color:var(--sky)}
+.jt-government{background:rgba(245,200,74,.12);color:var(--gold)} .jt-public{background:rgba(200,245,90,.1);color:var(--lime)}
+.jt-judicial{background:rgba(245,90,90,.1);color:var(--red)} .jt-other{background:var(--s2);color:var(--t3)}
+.job-deadline{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t2)}
+.job-deadline.jurg{color:var(--red)} .job-deadline.jsoon{color:var(--gold)}
+.job-followup{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--pur)}
+.job-detail{display:none;padding:12px 15px;background:var(--s2);border-top:1px solid var(--b1)}
+.job-detail.open{display:block}
+.jd-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
+
+/* ═══ MODALS ═══ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;align-items:center;justify-content:center;padding:14px}
+.overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:6px;width:100%;max-width:520px;overflow:hidden}
+.modal.wide{max-width:620px}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--b1)}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.08em}
+.modal-body{padding:16px} .modal-body.scroll{max-height:58vh;overflow-y:auto;padding:0}
+.modal-foot{padding:11px 16px;border-top:1px solid var(--b1);display:flex;justify-content:flex-end;gap:7px;align-items:center}
+.mf{margin-bottom:12px}
+.mf label{display:block;font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}
+.mf input,.mf select{width:100%;padding:7px 9px}
+.swatches{display:flex;gap:7px;flex-wrap:wrap}
+.swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.swatch.sel{border-color:#fff;transform:scale(1.2)}
+.syl-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--b1)}
+.syl-row:last-child{border-bottom:none}
+.syl-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--lime);flex-shrink:0;cursor:pointer}
+.syl-info{flex:1;display:flex;flex-direction:column;gap:4px}
+.syl-info input[type=text]{width:100%;padding:4px 8px;font-size:.78rem}
+.syl-meta{display:flex;gap:6px}
+.syl-meta input[type=date],.syl-meta select{padding:4px 7px;font-size:.72rem}
+.load-wrap{padding:28px 16px;text-align:center}
+.load-txt{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--t3);margin-bottom:12px}
+.load-bar{height:2px;background:var(--s2);border-radius:2px;overflow:hidden}
+.load-fill{height:100%;background:var(--lime);width:0%;transition:width .35s;border-radius:2px}
+
+/* ═══ MISC ═══ */
+.empty{padding:20px 15px;text-align:center;font-family:'DM Mono',monospace;font-size:.68rem;color:var(--t3)}
+.notes-ta{width:100%;background:var(--s2);border:none;border-top:1px solid var(--b1);color:var(--t1);font-family:'DM Mono',monospace;font-size:.78rem;padding:13px 15px;resize:none;height:115px;outline:none;line-height:1.6}
+.notes-ta::placeholder{color:var(--t3)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-title">Operation: Vermont</div>
+    <div class="nav-sub">Transfer Season 2026</div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="go('dash')" id="tab-dash">◈ Dashboard</div>
+    <div class="nav-tab" onclick="go('acad')" id="tab-acad">📚 Academics</div>
+    <div class="nav-tab" onclick="go('sob')" id="tab-sob">◎ Sobriety</div>
+    <div class="nav-tab" onclick="go('work')" id="tab-work">⊕ Workouts</div>
+    <div class="nav-tab" onclick="go('jobs')" id="tab-jobs">💼 Jobs</div>
+  </div>
+  <div class="nav-stats">
+    <div class="ns"><div class="v" id="ns-sob" style="color:var(--gold)">—</div><div class="l">Sober Days</div></div>
+    <div class="ns"><div class="v" id="ns-due" style="color:var(--red)">—</div><div class="l">Due ≤7d</div></div>
+    <div class="ns"><div class="v" id="ns-wk" style="color:var(--sky)">—</div><div class="l">Workouts</div></div>
+    <div class="ns"><div class="v" id="ns-jobs" style="color:var(--lime)">—</div><div class="l">Applied</div></div>
+    <div class="ns-sync">
+      <div><span class="sync-dot sync-ok" id="sync-dot"></span></div>
+      <div class="sync-lbl" id="sync-lbl">synced</div>
+    </div>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="g2">
+    <div class="card gfull">
+      <div class="ch"><div class="ct">Upcoming Deadlines & Exams</div><div class="badge" id="d-dc">—</div></div>
+      <div id="d-countdown"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Transfer Milestones</div><div class="badge" id="d-mb">—</div></div>
+      <div style="padding:9px 15px 5px">
+        <div class="pbar-row"><span>Progress</span><span id="d-mpct">0%</span></div>
+        <div class="pbar"><div class="pbar-fill" id="d-mbar" style="width:0%"></div></div>
+      </div>
+      <div id="d-milestones"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Sobriety</div><button class="btn-ghost" onclick="go('sob')">Log today →</button></div>
+      <div style="padding:18px 15px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:3.2rem;line-height:1;color:var(--gold)" id="d-streak">0</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-top:3px">Days</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--t3);margin-top:10px" id="d-tlog">No entry yet today</div>
+      </div>
+    </div>
+    <div class="card gfull">
+      <div class="ch"><div class="ct">Notes</div></div>
+      <textarea class="notes-ta" id="notes-ta" placeholder="Brain dump..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ACADEMICS -->
+<div class="page" id="page-acad">
+  <div class="card">
+    <div class="ch">
+      <div class="ct">Classes</div>
+      <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="openClsModal()">+ Add Class</button>
+    </div>
+    <div id="cls-list"></div>
+    <div id="cls-empty" class="empty" style="display:none">No classes yet.</div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct">Transfer App Deadlines</div><button class="btn-ghost" onclick="openItemModal(null,'transfer')">+ Add</button></div>
+    <div id="transfer-list"></div>
+    <div id="transfer-empty" class="empty">Track per-school deadlines here.</div>
+  </div>
+</div>
+
+<!-- SOBRIETY -->
+<div class="page" id="page-sob">
+  <div class="sob-top">
+    <div class="streak-card">
+      <div class="streak-num" id="sob-num">0</div>
+      <div class="streak-lbl">Day Streak</div>
+      <div class="streak-since">Since <span id="sob-since">—</span></div>
+      <div class="streak-btns">
+        <button class="btn-ghost" onclick="setSobStart()">Set date</button>
+        <button class="btn-danger" onclick="resetSob()">Reset</button>
+      </div>
+    </div>
+    <div class="log-card">
+      <div class="ch"><div class="ct">Log Today</div><div class="badge" id="today-badge">No entry</div></div>
+      <div class="log-body">
+        <div class="lf-label">Did you drink today?</div>
+        <div class="rg" id="drank-rg">
+          <div class="ro" data-v="no" onclick="pickDrank('no')">🧊 Stayed sober</div>
+          <div class="ro" data-v="yes" onclick="pickDrank('yes')">🍷 Yeah I drank</div>
+        </div>
+        <div id="who-sec" style="display:none">
+          <div class="lf-label">With who?</div>
+          <div class="rg" id="who-rg">
+            <div class="ro" data-v="solo" onclick="pickWho('solo')">🥀 Alone</div>
+            <div class="ro" data-v="friends" onclick="pickWho('friends')">🥂 With friends</div>
+            <div class="ro" data-v="mixed" onclick="pickWho('mixed')">👥 Social event</div>
+          </div>
+        </div>
+        <div class="lf-label">How do you feel about it?</div>
+        <div class="rg" id="feel-rg">
+          <div class="ro" data-v="good" onclick="pickFeel('good')">😌 Good</div>
+          <div class="ro" data-v="fine" onclick="pickFeel('fine')">🤷 Fine</div>
+          <div class="ro" data-v="meh" onclick="pickFeel('meh')">😶 Meh</div>
+          <div class="ro" data-v="bad" onclick="pickFeel('bad')">😔 Bad about it</div>
+        </div>
+        <textarea class="sob-note" id="sob-note" placeholder="Notes (optional)..."></textarea>
+        <button class="btn btn-lime" onclick="saveLog()" style="width:100%;margin-top:9px">Save Entry</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch">
+      <div class="ct">Calendar</div>
+      <div style="display:flex;gap:9px;font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3)">
+        <span style="color:var(--sky)">◆ sober</span><span style="color:var(--pur)">◆ drank/ok</span><span style="color:var(--red)">◆ drank/bad</span>
+      </div>
+    </div>
+    <div class="cal-grid" id="sob-cal"></div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct">Log History</div><div class="badge" id="log-cnt">0 entries</div></div>
+    <div id="log-hist"></div>
+    <div id="log-empty" class="empty">No entries yet.</div>
+  </div>
+</div>
+
+<!-- WORKOUTS -->
+<div class="page" id="page-work">
+  <div class="card">
+    <div class="ch"><div class="ct">Calisthenics Log</div><div class="badge">Click any day to toggle</div></div>
+    <div class="wgrid" id="wgrid"></div>
+    <div class="wstats">
+      <div>This week: <span id="w-wk">0</span></div>
+      <div>This month: <span id="w-mo">0</span></div>
+      <div>All time: <span id="w-al">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- JOBS -->
+<div class="page" id="page-jobs">
+  <div class="card">
+    <div class="ch">
+      <div class="ct">Summer Job Applications</div>
+      <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="openJobModal(null)">+ Add Job</button>
+    </div>
+    <div class="job-stats-row" id="job-stats"></div>
+    <div class="filter-bar">
+      <input type="text" class="filter-search" id="job-search" placeholder="Search employer…" oninput="renderJobs()">
+      <div class="filter-chip active" data-f="all" onclick="setFilter('all')">All</div>
+      <div class="filter-chip" data-f="not-started" onclick="setFilter('not-started')">Not started</div>
+      <div class="filter-chip" data-f="submitted" onclick="setFilter('submitted')">Submitted</div>
+      <div class="filter-chip" data-f="interviewing" onclick="setFilter('interviewing')">Interviewing</div>
+      <div class="filter-chip" data-f="rejected" onclick="setFilter('rejected')">Rejected</div>
+      <div class="filter-chip" data-f="offer" onclick="setFilter('offer')">Offer 🎉</div>
+    </div>
+    <div id="job-list"></div>
+    <div id="job-empty" class="empty">No applications yet. Hit "+ Add Job" to start tracking.</div>
+  </div>
+</div>
+
+<!-- MODAL: Add Class -->
+<div class="overlay" id="m-cls">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">Add Class</div><button class="btn-icon" onclick="closeM('m-cls')">✕</button></div>
+    <div class="modal-body">
+      <div class="mf"><label>Class Name</label><input type="text" id="mc-name" placeholder="e.g. Contracts, Torts…"></div>
+      <div class="mf"><label>Color</label><div class="swatches" id="mc-sw"></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('m-cls')">Cancel</button>
+      <button class="btn btn-lime" onclick="saveCls()">Add Class</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Item -->
+<div class="overlay" id="m-item">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="mi-title">Add Item</div><button class="btn-icon" onclick="closeM('m-item')">✕</button></div>
+    <div class="modal-body">
+      <div class="mf"><label>Name</label><input type="text" id="mi-name" placeholder="e.g. Midterm exam, Reading Ch 4…"></div>
+      <div class="mf" id="mi-cls-wrap"><label>Class</label><select id="mi-cls"></select></div>
+      <div class="mf"><label>Type</label>
+        <select id="mi-type">
+          <option value="assignment">Assignment / Reading</option>
+          <option value="exam">Exam</option>
+          <option value="paper">Paper / Memo</option>
+          <option value="transfer">Transfer Deadline</option>
+        </select>
+      </div>
+      <div class="mf"><label>Due Date & Time</label><input type="datetime-local" id="mi-due"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('m-item')">Cancel</button>
+      <button class="btn btn-lime" onclick="saveItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Syllabus -->
+<input type="file" id="syl-file" accept=".pdf,.doc,.docx" style="display:none" onchange="handleSylFile(event)">
+<div class="overlay" id="m-syl">
+  <div class="modal wide">
+    <div class="modal-hdr"><div class="modal-title" id="syl-title">Import Syllabus</div><button class="btn-icon" onclick="closeM('m-syl')">✕</button></div>
+    <div class="modal-body scroll" id="syl-body">
+      <div class="load-wrap" id="syl-loading">
+        <div class="load-txt" id="syl-load-txt">Parsing syllabus with Claude…</div>
+        <div class="load-bar"><div class="load-fill" id="syl-prog"></div></div>
+      </div>
+      <div id="syl-rows" style="display:none"></div>
+      <div id="syl-err" style="display:none;padding:20px 15px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--red)"></div>
+    </div>
+    <div class="modal-foot" id="syl-foot" style="display:none">
+      <button class="btn-ghost" onclick="closeM('m-syl')">Cancel</button>
+      <span id="syl-cnt" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--t3)"></span>
+      <button class="btn btn-lime" onclick="importSyl()">Import Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add/Edit Job -->
+<div class="overlay" id="m-job">
+  <div class="modal wide">
+    <div class="modal-hdr"><div class="modal-title" id="mj-title">Add Job</div><button class="btn-icon" onclick="closeM('m-job')">✕</button></div>
+    <div class="modal-body">
+      <div class="mf"><label>Employer / Organization</label><input type="text" id="mj-employer" placeholder="e.g. Manhattan DA's Office"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mf"><label>Type</label>
+          <select id="mj-type">
+            <option value="biglaw">Biglaw / Large Firm</option>
+            <option value="boutique">Boutique / Small Firm</option>
+            <option value="government">Government / DA / PD</option>
+            <option value="public">Public Interest / Nonprofit</option>
+            <option value="judicial">Judicial Internship</option>
+            <option value="other">Other / Whoever Will Take Me</option>
+          </select>
+        </div>
+        <div class="mf"><label>Status</label>
+          <select id="mj-status">
+            <option value="not-started">Not Started</option>
+            <option value="submitted">Submitted</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="rejected">Rejected</option>
+            <option value="offer">Offer 🎉</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mf"><label>Application Deadline</label><input type="date" id="mj-deadline" style="width:100%;padding:7px 9px"></div>
+        <div class="mf"><label>Follow-up Date</label><input type="date" id="mj-followup" style="width:100%;padding:7px 9px"></div>
+      </div>
+      <div class="mf"><label>Notes</label><textarea id="mj-notes" placeholder="Contact info, portal link, anything useful…" style="width:100%;min-height:80px;padding:7px 9px;resize:vertical;line-height:1.5"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('m-job')">Cancel</button>
+      <button class="btn-danger" id="mj-del-btn" style="display:none" onclick="delJobFromModal()">Delete</button>
+      <button class="btn btn-lime" onclick="saveJob()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════
+const SB_URL  = 'https://jjojuqvryzodtxqickkn.supabase.co';
+const SB_KEY  = 'sb_publishable__liL-ZUIN8YBjm3vjRfvQg_gVTZ_syJ';
+const SB_TABLE = 'tracker';
+const SB_ROW_KEY = 'main';
+
+// ═══════════════════════════════════════════════════════
+//  SEED DATA
+// ═══════════════════════════════════════════════════════
+const COLORS = ['#c8f55a','#f5c84a','#5ac8f5','#f55a5a','#c47cf5','#f5935a','#5af5a8','#f55ab4'];
+
+const MS_DEF = [
+  {id:1,name:'Personal statement — shitty first draft',date:'ASAP',done:false,subs:[]},
+  {id:2,name:'Personal statement — polished final',date:'Feb/Mar',done:false,subs:[]},
+  {id:3,name:"Dean's certification requested",date:'Feb/Mar',done:false,subs:[]},
+  {id:4,name:'Letters of Rec',date:'Feb/Mar',done:false,subs:[
+    {id:401,name:'Requested — Hamilton',done:false},{id:402,name:'Confirmed — Hamilton',done:false},{id:403,name:'Received — Hamilton',done:false},
+    {id:411,name:'Requested — Hoffmann',done:false},{id:412,name:'Confirmed — Hoffmann',done:false},{id:413,name:'Received — Hoffmann',done:false},
+    {id:421,name:'Requested — Johnson',done:false},{id:422,name:'Confirmed — Johnson',done:false},{id:423,name:'Received — Johnson',done:false},
+  ]},
+  {id:5,name:'Applications submitted',date:'Mar/Apr',done:false,subs:[
+    {id:501,name:'NYU',done:false},{id:502,name:'Fordham',done:false},{id:503,name:'Cardozo',done:false},
+    {id:504,name:'Brooklyn Law',done:false},{id:505,name:"St. John's",done:false},{id:506,name:'Rutgers',done:false},
+    {id:507,name:'Seton Hall',done:false},{id:508,name:'CUNY',done:false},{id:509,name:'New York Law School',done:false},
+  ]},
+  {id:6,name:'Spring finals survived',date:'May',done:false,subs:[]},
+  {id:7,name:'Moved out of Vermont',date:'May/Jun',done:false,subs:[]},
+  {id:8,name:'First acceptance letter',date:'Jun/Jul',done:false,subs:[]},
+  {id:9,name:'Housing secured in NYC',date:'Jul',done:false,subs:[]},
+];
+
+const CLASS_SEED = [
+  {id:1001,name:'Legislation & Regulation',color:'#f5c84a'},
+  {id:1002,name:'Property Law',color:'#c8f55a'},
+  {id:1003,name:'Criminal Law',color:'#f55a5a'},
+  {id:1004,name:'LRW II',color:'#5ac8f5'},
+];
+
+const ITEM_SEED = [
+  {id:2001,classId:1001,name:'In-class Midterm',type:'exam',due:'2026-02-24T11:20',done:false},
+  {id:2002,classId:1001,name:'Last Class / Semester Wrap',type:'assignment',due:'2026-04-23T11:20',done:false},
+  {id:2003,classId:1002,name:'Mandatory Pass/Fail Assignment (4:00 PM)',type:'paper',due:'2026-03-11T16:00',done:false},
+  {id:2004,classId:1002,name:'Optional Assignment (4:00 PM)',type:'paper',due:'2026-04-13T16:00',done:false},
+  {id:2005,classId:1002,name:'⚠ Final Exam — confirm date with registrar',type:'exam',due:'2026-05-01T09:00',done:false},
+  {id:2006,classId:1003,name:'Make-up Class — Midterm Review (11:30 AM)',type:'assignment',due:'2026-02-20T11:30',done:false},
+  {id:2007,classId:1003,name:'Midterm Exam',type:'exam',due:'2026-02-26T09:00',done:false},
+  {id:2008,classId:1003,name:'⚠ Final Exam — confirm date with registrar',type:'exam',due:'2026-05-01T09:00',done:false},
+  {id:2009,classId:1004,name:'Writing Assignment 1: Roadmap paragraph(s) — before class',type:'paper',due:'2026-02-09T08:30',done:false},
+  {id:2010,classId:1004,name:'Writing Assignment 2: First Submission — full memo (5:00 PM)',type:'paper',due:'2026-03-10T17:00',done:false},
+  {id:2011,classId:1004,name:'⚠ Writing Assignment 3: Final Memo — update to 2 wks after your conference',type:'paper',due:'2026-03-30T23:59',done:false},
+  {id:2012,classId:1004,name:'Formal Oral Arguments — Tuesday evening',type:'exam',due:'2026-04-14T18:00',done:false},
+  {id:2013,classId:1004,name:'Formal Oral Arguments — Thursday evening',type:'exam',due:'2026-04-16T18:00',done:false},
+  {id:2014,classId:1004,name:'Formal Oral Arguments — Friday afternoon/evening',type:'exam',due:'2026-04-17T17:00',done:false},
+];
+
+function defState() {
+  return {
+    soberSince:null, logs:{},
+    classes:JSON.parse(JSON.stringify(CLASS_SEED)),
+    items:JSON.parse(JSON.stringify(ITEM_SEED)),
+    milestones:JSON.parse(JSON.stringify(MS_DEF)),
+    workouts:{}, notes:'', selColor:COLORS[0], jobs:[],
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE + SUPABASE SYNC
+// ═══════════════════════════════════════════════════════
+let S = defState();
+let saveTimer = null;
+let syncStatus = 'ok'; // ok | saving | error
+
+function setSyncStatus(s, msg) {
+  syncStatus = s;
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-lbl');
+  if (!dot) return;
+  dot.className = 'sync-dot sync-' + s;
+  lbl.textContent = msg || (s === 'ok' ? 'synced' : s === 'saving' ? 'saving…' : 'offline');
+}
+
+async function loadFromSupabase() {
+  setSyncStatus('saving', 'loading…');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?key=eq.${SB_ROW_KEY}&select=value`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    const rows = await res.json();
+    if (rows && rows.length > 0) {
+      const loaded = JSON.parse(rows[0].value);
+      // merge: keep seed structure for milestones/classes/items if DB is empty
+      S = { ...defState(), ...loaded };
+    }
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('err', 'offline');
+    // fall back to localStorage
+    try { const ls = localStorage.getItem('vt_v3'); if(ls) S = {...defState(),...JSON.parse(ls)}; } catch(_){}
+  }
+  renderAll();
+}
+
+async function saveToSupabase() {
+  setSyncStatus('saving');
+  const value = JSON.stringify(S);
+  // also save to localStorage as fallback
+  try { localStorage.setItem('vt_v3', value); } catch(_){}
+  try {
+    // upsert
+    const res = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({ key: SB_ROW_KEY, value })
+    });
+    if (!res.ok) throw new Error('save failed');
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('err', 'save failed');
+  }
+}
+
+function save() {
+  // debounce: wait 800ms after last change before saving
+  clearTimeout(saveTimer);
+  setSyncStatus('saving');
+  saveTimer = setTimeout(saveToSupabase, 800);
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+const today    = () => new Date().toISOString().split('T')[0];
+const daysUntil= ds => { const d=new Date(ds),n=new Date(); n.setHours(0,0,0,0); return Math.ceil((d-n)/86400000); };
+const fmtDT    = ds => { const d=new Date(ds); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); };
+const fmtD     = ds => new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const esc      = s  => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const escA     = s  => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const clsById  = id => S.classes.find(c=>c.id===id);
+const sobDays  = ()  => S.soberSince ? Math.max(0,Math.floor((new Date()-new Date(S.soberSince))/86400000)) : 0;
+
+// ═══════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════
+function go(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  renderAll();
+}
+
+function renderAll() { renderDash(); renderAcad(); renderSob(); renderWork(); renderJobs(); renderNav(); }
+
+function renderNav() {
+  document.getElementById('ns-sob').textContent = sobDays();
+  const soon = S.items.filter(i=>!i.done&&i.due&&daysUntil(i.due)>=0&&daysUntil(i.due)<=7).length;
+  document.getElementById('ns-due').textContent = soon;
+  const ws=new Date(); ws.setDate(ws.getDate()-ws.getDay()); ws.setHours(0,0,0,0);
+  const wk=Object.keys(S.workouts).filter(k=>S.workouts[k]&&new Date(k)>=ws).length;
+  document.getElementById('ns-wk').textContent = wk;
+  const applied=(S.jobs||[]).filter(j=>j.status!=='not-started').length;
+  document.getElementById('ns-jobs').textContent = applied;
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDash() {
+  const up = S.items.filter(i=>!i.done&&i.due).map(i=>({...i,d:daysUntil(i.due)})).filter(i=>i.d>=-1).sort((a,b)=>a.d-b.d).slice(0,10);
+  document.getElementById('d-dc').textContent = up.length+' upcoming';
+  const cdEl = document.getElementById('d-countdown');
+  cdEl.innerHTML = !up.length ? '<div class="empty">No upcoming deadlines.</div>' : up.map(i=>{
+    const c=i.d<0?'urg':i.d===0?'urg':i.d<=3?'urg':i.d<=7?'soon':i.d<=14?'ok':'far';
+    const lbl=i.d<0?Math.abs(i.d)+'d ago':i.d===0?'TODAY':i.d+'d';
+    const cls=clsById(i.classId);
+    return `<div class="cd-item"><div class="cd-num ${c}">${lbl}</div><div class="cd-info"><div class="cd-name">${cls?`<span class="cdot" style="background:${cls.color}"></span>`:''}${esc(i.name)}</div><div class="cd-sub">${fmtDT(i.due)}${cls?' · '+esc(cls.name):''}</div></div><span class="type-badge tb-${i.type}">${i.type}</span></div>`;
+  }).join('');
+
+  let done=0,tot=0;
+  S.milestones.forEach(m=>{ if(!m.subs||!m.subs.length){tot++;if(m.done)done++;} else m.subs.forEach(s=>{tot++;if(s.done)done++;}); });
+  const pct=Math.round(done/tot*100);
+  document.getElementById('d-mb').textContent=done+'/'+tot+' items';
+  document.getElementById('d-mpct').textContent=pct+'%';
+  document.getElementById('d-mbar').style.width=pct+'%';
+  const nxt=S.milestones.find(m=>!m.done);
+  document.getElementById('d-milestones').innerHTML=S.milestones.map(m=>renderMI(m,m===nxt)).join('');
+
+  document.getElementById('d-streak').textContent=sobDays();
+  const tl=S.logs[today()];
+  document.getElementById('d-tlog').textContent=tl?(tl.drank?`Drank (${tl.who||'solo'}) · felt ${tl.feel||'?'}`:'Stayed sober'+(tl.feel?' · felt '+tl.feel:'')):'No entry yet today';
+  document.getElementById('notes-ta').value=S.notes||'';
+}
+
+function renderMI(m,isNxt) {
+  const hasSubs=m.subs&&m.subs.length>0;
+  const sd=hasSubs?m.subs.filter(s=>s.done).length:0, st=hasSubs?m.subs.length:0;
+  const sc=hasSubs?`<span class="sub-count">${sd}/${st}</span>`:'';
+  const subsHtml=hasSubs?`<div class="subs-wrap">${m.subs.map(s=>`<div class="sub-item ${s.done?'sdone':''}" onclick="toggleSub(${m.id},${s.id})"><div class="sbox"><div class="schk"></div></div><span class="sname">${esc(s.name)}</span></div>`).join('')}</div>`:'';
+  return `<div><div class="mi ${m.done?'mdone':''} ${isNxt?'mnext':''}" onclick="toggleM(${m.id})"><div class="mdot"></div><div class="mname">${esc(m.name)}${sc}</div><div class="mdate">${esc(m.date)}</div></div>${subsHtml}</div>`;
+}
+
+function toggleM(id){ S.milestones=S.milestones.map(m=>m.id===id?{...m,done:!m.done}:m); save(); renderAll(); }
+function toggleSub(pid,sid){
+  S.milestones=S.milestones.map(m=>{ if(m.id!==pid)return m; const subs=m.subs.map(s=>s.id===sid?{...s,done:!s.done}:s); return {...m,subs,done:subs.length>0&&subs.every(s=>s.done)}; });
+  save(); renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACADEMICS
+// ═══════════════════════════════════════════════════════
+function renderAcad() {
+  const cont=document.getElementById('cls-list'), empty=document.getElementById('cls-empty');
+  if(!S.classes.length){cont.innerHTML='';empty.style.display='block';}
+  else {
+    empty.style.display='none';
+    cont.innerHTML=S.classes.map(cls=>{
+      const its=S.items.filter(i=>i.classId===cls.id), pend=its.filter(i=>!i.done).length;
+      return `<div class="cls-card open" id="cls-${cls.id}"><div class="cls-hdr" onclick="toggleCls(${cls.id})"><div class="cls-dot" style="background:${cls.color}"></div><div class="cls-name">${esc(cls.name)}</div><div class="cls-pend">${pend} pending</div><button class="btn-ghost" style="margin-left:7px" onclick="event.stopPropagation();openItemModal(${cls.id},'assignment')">+ Add</button><button class="btn btn-sky" style="margin-left:4px;font-size:.65rem;padding:4px 9px" onclick="event.stopPropagation();trigSyl(${cls.id})">⬆ Syllabus</button><button class="btn-icon" style="margin-left:4px" onclick="event.stopPropagation();delCls(${cls.id})">✕</button><div class="cls-chev">▶</div></div><div class="cls-body">${its.length?its.map(renderItem).join(''):'<div class="empty">No items yet.</div>'}</div></div>`;
+    }).join('');
+  }
+  const td=S.items.filter(i=>i.type==='transfer');
+  const tl=document.getElementById('transfer-list'), te=document.getElementById('transfer-empty');
+  if(td.length){te.style.display='none';tl.innerHTML=td.map(renderItem).join('');}
+  else{te.style.display='block';tl.innerHTML='';}
+}
+
+function renderItem(i) {
+  const d=i.due?daysUntil(i.due):null; let dc='',ds='';
+  if(i.due){ds=fmtDT(i.due);dc=d<0?'ov':d===0?'td':d<=3?'sn':'';}
+  return `<div class="ai ${i.done?'adone':''}"><div class="acheck" onclick="toggleItem(${i.id})"></div><div class="ainfo"><div class="aname" onclick="toggleItem(${i.id})">${esc(i.name)}</div><div class="ameta">${i.due?`<span class="adue ${dc}">${esc(ds)}</span>`:''}<span class="type-badge tb-${i.type}">${i.type}</span></div></div><div class="btn-icon" onclick="delItem(${i.id})">✕</div></div>`;
+}
+
+function toggleCls(id){const el=document.getElementById('cls-'+id);if(el)el.classList.toggle('open');}
+function toggleItem(id){S.items=S.items.map(i=>i.id===id?{...i,done:!i.done}:i);save();renderAll();}
+function delItem(id){S.items=S.items.filter(i=>i.id!==id);save();renderAll();}
+function delCls(id){if(!confirm('Delete this class and all its items?'))return;S.classes=S.classes.filter(c=>c.id!==id);S.items=S.items.filter(i=>i.classId!==id);save();renderAll();}
+
+function openClsModal(){document.getElementById('mc-name').value='';document.getElementById('mc-sw').innerHTML=COLORS.map(c=>`<div class="swatch ${c===S.selColor?'sel':''}" style="background:${c}" onclick="pickColor('${c}')"></div>`).join('');openM('m-cls');}
+function pickColor(c){S.selColor=c;document.querySelectorAll('#mc-sw .swatch').forEach(s=>s.classList.toggle('sel',s.style.background===c||s.style.backgroundColor===c));}
+function saveCls(){const n=document.getElementById('mc-name').value.trim();if(!n)return;S.classes.push({id:Date.now(),name:n,color:S.selColor||COLORS[0]});save();closeM('m-cls');renderAll();}
+
+function openItemModal(clsId,type){
+  ui.itemClsId=clsId;ui.itemType=type;
+  document.getElementById('mi-title').textContent=type==='transfer'?'Add Transfer Deadline':'Add Item';
+  const sel=document.getElementById('mi-cls');
+  sel.innerHTML=S.classes.map(c=>`<option value="${c.id}"${c.id===clsId?' selected':''}>${esc(c.name)}</option>`).join('');
+  document.getElementById('mi-cls-wrap').style.display=type==='transfer'?'none':'block';
+  document.getElementById('mi-name').value='';
+  document.getElementById('mi-type').value=type||'assignment';
+  const n=new Date();n.setHours(23,59,0,0);document.getElementById('mi-due').value=n.toISOString().slice(0,16);
+  openM('m-item');
+}
+function saveItem(){
+  const name=document.getElementById('mi-name').value.trim();if(!name)return;
+  const type=document.getElementById('mi-type').value;
+  const clsId=type==='transfer'?null:(ui.itemClsId||parseInt(document.getElementById('mi-cls').value));
+  const due=document.getElementById('mi-due').value;
+  S.items.push({id:Date.now(),name,classId:clsId,type,due,done:false});
+  save();closeM('m-item');renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SYLLABUS IMPORT
+// ═══════════════════════════════════════════════════════
+let sylParsed=[]; 
+function trigSyl(clsId){ui.sylClsId=clsId;document.getElementById('syl-file').value='';document.getElementById('syl-file').click();}
+
+async function handleSylFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const cls=clsById(ui.sylClsId);
+  document.getElementById('syl-title').textContent='Parsing: '+(cls?cls.name:'Syllabus');
+  document.getElementById('syl-loading').style.display='block';
+  document.getElementById('syl-rows').style.display='none';
+  document.getElementById('syl-err').style.display='none';
+  document.getElementById('syl-foot').style.display='none';
+  openM('m-syl');
+  const prog=document.getElementById('syl-prog');let p=0;
+  const t=setInterval(()=>{p=Math.min(p+Math.random()*7,82);prog.style.width=p+'%';},300);
+  try{
+    const b64=await toB64(file);
+    const isPdf=file.name.toLowerCase().endsWith('.pdf');
+    const mtype=isPdf?'application/pdf':'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    const yr=new Date().getFullYear();
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:mtype,data:b64}},{type:'text',text:`Parse this law school syllabus. Extract ALL items with specific due dates: assignments, readings due, papers, exams, quizzes, oral arguments.\n\nReturn ONLY valid JSON, no markdown:\n{"items":[{"name":"concise name","date":"YYYY-MM-DD","type":"assignment|exam|paper"}]}\n\nRules: year is ${yr} (use ${yr+1} if date wraps). Skip regular class meeting dates unless student action required. If no dated items return {"items":[]}.`}]}]})});
+    clearInterval(t);prog.style.width='100%';
+    const data=await resp.json();if(data.error)throw new Error(data.error.message);
+    const raw=data.content.map(b=>b.text||'').join('');
+    sylParsed=JSON.parse(raw.replace(/```json|```/g,'').trim()).items||[];
+    renderSylRows();
+  }catch(err){clearInterval(t);document.getElementById('syl-loading').style.display='none';const errEl=document.getElementById('syl-err');errEl.style.display='block';errEl.textContent='Could not parse: '+err.message;}
+}
+
+function renderSylRows(){
+  document.getElementById('syl-loading').style.display='none';
+  if(!sylParsed.length){document.getElementById('syl-err').style.display='block';document.getElementById('syl-err').textContent='No dated items found.';return;}
+  document.getElementById('syl-rows').style.display='block';document.getElementById('syl-foot').style.display='flex';
+  document.getElementById('syl-rows').innerHTML=`<div style="padding:9px 13px;border-bottom:1px solid var(--b1);font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3)">Uncheck items you don't want. Dates default to 11:59 PM.</div>`+sylParsed.map((item,i)=>`<div class="syl-row"><input type="checkbox" id="sc-${i}" checked onchange="updSylCnt()"><div class="syl-info"><input type="text" id="sn-${i}" value="${escA(item.name)}" oninput="updSylCnt()"><div class="syl-meta"><input type="date" id="sd-${i}" value="${item.date||''}"><select id="st-${i}"><option value="assignment"${item.type==='assignment'?' selected':''}>assignment</option><option value="exam"${item.type==='exam'?' selected':''}>exam</option><option value="paper"${item.type==='paper'?' selected':''}>paper</option></select></div></div></div>`).join('');
+  updSylCnt();
+}
+function updSylCnt(){const chk=sylParsed.map((_,i)=>document.getElementById('sc-'+i)?.checked).filter(Boolean).length;document.getElementById('syl-cnt').textContent=chk+' of '+sylParsed.length+' selected';}
+function importSyl(){let n=0;sylParsed.forEach((item,i)=>{if(!document.getElementById('sc-'+i)?.checked)return;const name=document.getElementById('sn-'+i)?.value.trim();if(!name)return;const date=document.getElementById('sd-'+i)?.value;const type=document.getElementById('st-'+i)?.value||'assignment';S.items.push({id:Date.now()+i,name,classId:ui.sylClsId,type,due:date?date+'T23:59':'',done:false});n++;});save();closeM('m-syl');renderAll();setTimeout(()=>alert(`Imported ${n} item${n!==1?'s':''}.`),100);}
+const toB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Read failed'));r.readAsDataURL(f);});
+
+// ═══════════════════════════════════════════════════════
+//  SOBRIETY
+// ═══════════════════════════════════════════════════════
+function renderSob(){
+  document.getElementById('sob-num').textContent=sobDays();
+  document.getElementById('sob-since').textContent=S.soberSince?fmtD(S.soberSince):'not set';
+  const tl=S.logs[today()];
+  document.getElementById('today-badge').textContent=tl?'✓ Logged':'No entry';
+  if(tl){ui.drank=tl.drank?'yes':'no';ui.who=tl.who;ui.feel=tl.feel;apDrank(ui.drank);apWho(ui.who);apFeel(ui.feel);document.getElementById('sob-note').value=tl.note||'';}
+  else{ui.drank=null;ui.who=null;ui.feel=null;document.querySelectorAll('#drank-rg .ro,#who-rg .ro,#feel-rg .ro').forEach(e=>e.className='ro');document.getElementById('who-sec').style.display='none';document.getElementById('sob-note').value='';}
+  renderCal();renderLogHist();
+}
+function apDrank(v){document.querySelectorAll('#drank-rg .ro').forEach(e=>{e.className='ro';if(e.dataset.v===v)e.classList.add(v==='no'?'sno':'syes');});document.getElementById('who-sec').style.display=v==='yes'?'block':'none';}
+function apWho(v){document.querySelectorAll('#who-rg .ro').forEach(e=>{e.className='ro';if(e.dataset.v===v)e.classList.add('s'+v);});}
+function apFeel(v){document.querySelectorAll('#feel-rg .ro').forEach(e=>{e.className='ro';if(e.dataset.v===v)e.classList.add(v==='bad'?'sbad':'sfeel');});}
+function pickDrank(v){ui.drank=v;apDrank(v);}
+function pickWho(v){ui.who=v;apWho(v);}
+function pickFeel(v){ui.feel=v;apFeel(v);}
+function saveLog(){
+  if(!ui.drank){alert('Select whether you drank today.');return;}
+  const drank=ui.drank==='yes';
+  S.logs[today()]={drank,who:drank?ui.who:null,feel:ui.feel,note:document.getElementById('sob-note').value.trim()};
+  if(drank&&ui.feel==='bad'&&confirm('You drank and feel bad about it — reset streak to today?'))S.soberSince=today();
+  save();renderSob();renderDash();renderNav();
+}
+function setSobStart(){const d=prompt('Sober start date (YYYY-MM-DD):',S.soberSince||today());if(d&&/^\d{4}-\d{2}-\d{2}$/.test(d)){S.soberSince=d;save();renderAll();}}
+function resetSob(){if(confirm('Reset streak to today?')){S.soberSince=today();save();renderAll();}}
+function renderCal(){
+  const grid=document.getElementById('sob-cal'),now=new Date(),start=new Date(now);start.setDate(now.getDate()-48);
+  const days=['S','M','T','W','T','F','S'];let h=days.map(d=>`<div class="cal-lbl">${d}</div>`).join('');
+  for(let i=0;i<start.getDay();i++)h+='<div></div>';
+  const tk=today();
+  for(let d=new Date(start);d<=now;d.setDate(d.getDate()+1)){const k=d.toISOString().split('T')[0],lg=S.logs[k],n=d.getDate();let c='';if(lg){if(!lg.drank)c='csob';else if(lg.feel==='bad')c='cbad';else if(lg.feel==='meh')c='cmeh';else c='cok';}h+=`<div class="cal-cell ${c} ${k===tk?'ctoday':''} ${lg?'hlog':''}" title="${k}">${n}</div>`;}
+  grid.innerHTML=h;
+}
+function renderLogHist(){
+  const entries=Object.entries(S.logs).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
+  const listEl=document.getElementById('log-hist'),noEl=document.getElementById('log-empty');
+  document.getElementById('log-cnt').textContent=entries.length+' entries';
+  if(!entries.length){noEl.style.display='block';listEl.innerHTML='';return;}
+  noEl.style.display='none';
+  const fm={good:'lf-good',fine:'lf-fine',meh:'lf-meh',bad:'lf-bad'};
+  listEl.innerHTML=entries.map(([k,lg])=>{const tb=lg.drank?`<span class="ltb lt-drank">drank${lg.who?' · '+lg.who:''}</span>`:'<span class="ltb lt-sob">sober</span>';const fb=lg.feel?`<span class="ltb ${fm[lg.feel]||''}">${lg.feel}</span>`:'';return `<div class="lentry"><div class="lentry-top"><span class="ldate">${fmtD(k)}</span>${tb}${fb}</div>${lg.note?`<div class="lnote">"${esc(lg.note)}"</div>`:''}</div>`;}).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  WORKOUTS
+// ═══════════════════════════════════════════════════════
+function renderWork(){
+  const now=new Date(),start=new Date(now);start.setDate(now.getDate()-41);
+  const days=['S','M','T','W','T','F','S'];let h=days.map(d=>`<div class="wlbl">${d}</div>`).join('');
+  for(let i=0;i<start.getDay();i++)h+='<div></div>';
+  const tk=today(),ws=new Date(now);ws.setDate(now.getDate()-now.getDay());ws.setHours(0,0,0,0);let wk=0,mo=0;
+  for(let d=new Date(start);d<=now;d.setDate(d.getDate()+1)){const k=d.toISOString().split('T')[0],done=!!S.workouts[k];if(done){const dd=new Date(k);if(dd>=ws)wk++;if(dd.getMonth()===now.getMonth())mo++;}h+=`<div class="wcell ${done?'wd':''} ${k===tk?'wt':''}" onclick="togW('${k}')">${d.getDate()}</div>`;}
+  document.getElementById('wgrid').innerHTML=h;
+  document.getElementById('w-wk').textContent=wk;document.getElementById('w-mo').textContent=mo;
+  document.getElementById('w-al').textContent=Object.values(S.workouts).filter(Boolean).length;
+}
+function togW(k){S.workouts[k]=!S.workouts[k];save();renderWork();renderNav();}
+
+// ═══════════════════════════════════════════════════════
+//  JOBS
+// ═══════════════════════════════════════════════════════
+let jobFilter='all', editingJobId=null;
+const JOB_TYPES={biglaw:'Biglaw / Large Firm',boutique:'Boutique / Small Firm',government:'Government / DA / PD',public:'Public Interest',judicial:'Judicial Internship',other:'Other'};
+const STATUS_ORDER=['not-started','submitted','interviewing','offer','rejected'];
+
+function renderJobs(){
+  const jobs=S.jobs||[];
+  const q=(document.getElementById('job-search')?.value||'').toLowerCase();
+  const counts={'not-started':0,submitted:0,interviewing:0,rejected:0,offer:0};
+  jobs.forEach(j=>{if(counts[j.status]!==undefined)counts[j.status]++;});
+  document.getElementById('job-stats').innerHTML=[
+    {k:'not-started',label:'Not Started'},{k:'submitted',label:'Submitted'},{k:'interviewing',label:'Interviewing'},{k:'offer',label:'Offer 🎉'},{k:'rejected',label:'Rejected'},{k:'total',label:'Total'},
+  ].map(({k,label})=>{const n=k==='total'?jobs.length:counts[k]||0;const cls=k==='total'?'':' st-'+k;return `<div class="jstat${cls}"><div class="jsn">${n}</div><div class="jsl">${label}</div></div>`;}).join('');
+  let filtered=jobs.filter(j=>{const mf=jobFilter==='all'||j.status===jobFilter;const ms=!q||j.employer.toLowerCase().includes(q)||(j.notes||'').toLowerCase().includes(q);return mf&&ms;});
+  filtered.sort((a,b)=>{const si=STATUS_ORDER.indexOf(a.status),sj=STATUS_ORDER.indexOf(b.status);if(si!==sj)return si-sj;if(a.deadline&&b.deadline)return a.deadline.localeCompare(b.deadline);if(a.deadline)return -1;if(b.deadline)return 1;return a.employer.localeCompare(b.employer);});
+  const listEl=document.getElementById('job-list'),emEl=document.getElementById('job-empty');
+  if(!filtered.length){emEl.style.display='block';listEl.innerHTML='';return;}
+  emEl.style.display='none';
+  listEl.innerHTML=filtered.map(j=>{
+    const d=j.deadline?daysUntil(j.deadline):null;
+    const dc=d===null?'':d<0?'jurg':d<=3?'jurg':d<=7?'jsoon':'';
+    const dlbl=d===null?'':`Due ${d<0?Math.abs(d)+'d ago':d===0?'today':d+'d'}`;
+    const flbl=j.followup?`↪ follow up ${fmtD(j.followup)}`:'';
+    const dead=j.status==='rejected'||j.status==='offer';
+    return `<div class="job-row ${dead?'jdead':''}" onclick="toggleJobDetail(${j.id})"><span class="job-status-pill sp-${j.status}">${j.status.replace('-',' ')}</span><div class="job-main"><div class="job-employer">${esc(j.employer)}</div><div class="job-meta"><span class="job-type-badge jt-${j.type}">${JOB_TYPES[j.type]||j.type}</span>${dlbl?`<span class="job-deadline ${dc}">${dlbl}</span>`:''}${flbl?`<span class="job-followup">${flbl}</span>`:''}</div><div id="jd-${j.id}" class="job-detail">${j.notes?`<div style="font-size:.78rem;color:var(--t2);line-height:1.5;white-space:pre-wrap;margin-bottom:8px">${esc(j.notes)}</div>`:''}<div class="jd-actions"><button class="btn-ghost" onclick="event.stopPropagation();openJobModal(${j.id})">Edit</button><button class="btn-danger" onclick="event.stopPropagation();delJob(${j.id})">Delete</button></div></div></div></div>`;
+  }).join('');
+}
+function toggleJobDetail(id){const el=document.getElementById('jd-'+id);if(el)el.classList.toggle('open');}
+function setFilter(f){jobFilter=f;document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f));renderJobs();}
+function openJobModal(id){
+  editingJobId=id;const j=id?(S.jobs||[]).find(j=>j.id===id):null;
+  document.getElementById('mj-title').textContent=j?'Edit Job':'Add Job';
+  document.getElementById('mj-employer').value=j?.employer||'';
+  document.getElementById('mj-type').value=j?.type||'other';
+  document.getElementById('mj-status').value=j?.status||'not-started';
+  document.getElementById('mj-deadline').value=j?.deadline||'';
+  document.getElementById('mj-followup').value=j?.followup||'';
+  document.getElementById('mj-notes').value=j?.notes||'';
+  document.getElementById('mj-del-btn').style.display=j?'block':'none';
+  openM('m-job');
+}
+function saveJob(){
+  const employer=document.getElementById('mj-employer').value.trim();if(!employer){document.getElementById('mj-employer').focus();return;}
+  const job={id:editingJobId||Date.now(),employer,type:document.getElementById('mj-type').value,status:document.getElementById('mj-status').value,deadline:document.getElementById('mj-deadline').value,followup:document.getElementById('mj-followup').value,notes:document.getElementById('mj-notes').value.trim()};
+  if(!S.jobs)S.jobs=[];
+  if(editingJobId){S.jobs=S.jobs.map(j=>j.id===editingJobId?job:j);}else{S.jobs.push(job);}
+  save();closeM('m-job');renderJobs();renderNav();
+}
+function delJob(id){if(!confirm('Delete this application?'))return;S.jobs=(S.jobs||[]).filter(j=>j.id!==id);save();renderJobs();renderNav();}
+function delJobFromModal(){if(!editingJobId)return;delJob(editingJobId);closeM('m-job');}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════════════
+const openM=id=>document.getElementById(id).classList.add('open');
+const closeM=id=>document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+document.getElementById('notes-ta').addEventListener('input',function(){S.notes=this.value;save();});
+
+// ═══════════════════════════════════════════════════════
+//  UI STATE
+// ═══════════════════════════════════════════════════════
+let ui={drank:null,who:null,feel:null,itemClsId:null,itemType:null,sylClsId:null};
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+loadFromSupabase();
+</script>
+</body>
+</html>
