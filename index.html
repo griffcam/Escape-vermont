@@ -319,14 +319,16 @@ select{cursor:pointer} select option{background:var(--s2)}
           <button class="btn-ghost" onclick="go('sob')">Log →</button>
         </div>
       </div>
-      <div style="padding:7px 15px 10px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--t3)" id="d-tlog">No entry yet today</div>
-      <div class="ch" style="border-top:1px solid var(--b1);border-bottom:none"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
+          </div>
+    <div class="card">
+      <div class="ch"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
       <div class="todo-input-row">
-        <input type="text" id="todo-input" placeholder="Add a task… e.g. Read Leg & Reg pp. 269-86" onkeydown="if(event.key==='Enter')addTodo()">
+        <input type="text" id="todo-input" placeholder="Add a task… e.g. Read Leg &amp; Reg pp. 269-86" onkeydown="if(event.key==='Enter')addTodo()">
         <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="addTodo()">Add</button>
       </div>
       <div id="todo-list"></div>
       <div id="todo-empty" class="empty">No tasks. Add something you need to do.</div>
+    </div>
     </div>
 
     <div class="card gfull">
