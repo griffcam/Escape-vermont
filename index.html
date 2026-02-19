@@ -634,6 +634,8 @@ function setSyncStatus(s, msg) {
 
 async function loadFromSupabase() {
   setSyncStatus('saving', 'loading…');
+  // Always start from fresh seed — never merge from localStorage
+  S = defState();
   try {
     const res = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?key=eq.${SB_ROW_KEY}&select=value`, {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
@@ -642,14 +644,47 @@ async function loadFromSupabase() {
     const rows = await res.json();
     if (rows && rows.length > 0) {
       const loaded = JSON.parse(rows[0].value);
-      // merge: keep seed structure for milestones/classes/items if DB is empty
-      S = { ...defState(), ...loaded };
+      // Only merge fields that represent user changes, not seed data
+      S.soberSince = loaded.soberSince ?? S.soberSince;
+      S.logs = loaded.logs ?? S.logs;
+      S.workouts = loaded.workouts ?? S.workouts;
+      S.notes = loaded.notes ?? S.notes;
+      S.jobs = loaded.jobs ?? S.jobs;
+      S.todos = loaded.todos ?? S.todos;
+      S.selColor = loaded.selColor ?? S.selColor;
+      // Merge milestones: preserve done state but keep seed structure
+      if (loaded.milestones) {
+        const doneMap = {};
+        loaded.milestones.forEach(m => {
+          doneMap[m.id] = { done: m.done, subsOpen: m.subsOpen };
+          if (m.subs) m.subs.forEach(s => { doneMap[s.id] = { done: s.done }; });
+        });
+        S.milestones = S.milestones.map(m => {
+          const saved = doneMap[m.id] || {};
+          return { ...m, done: saved.done ?? m.done, subsOpen: saved.subsOpen ?? false,
+            subs: m.subs ? m.subs.map(s => ({ ...s, done: (doneMap[s.id]||{}).done ?? s.done })) : m.subs };
+        });
+      }
+      // Merge items: preserve done state by id
+      if (loaded.items) {
+        const itemDone = {};
+        loaded.items.forEach(i => { itemDone[i.id] = i.done; });
+        // Keep seed items with saved done state, then add any user-created items
+        const seedIds = new Set(S.items.map(i => i.id));
+        S.items = S.items.map(i => ({ ...i, done: itemDone[i.id] ?? i.done }));
+        const userItems = loaded.items.filter(i => !seedIds.has(i.id));
+        S.items = [...S.items, ...userItems];
+      }
+      // Merge classes: keep seed + any user-added classes
+      if (loaded.classes) {
+        const seedClsIds = new Set(S.classes.map(c => c.id));
+        const userCls = loaded.classes.filter(c => !seedClsIds.has(c.id));
+        S.classes = [...S.classes, ...userCls];
+      }
     }
     setSyncStatus('ok');
   } catch(e) {
     setSyncStatus('err', 'offline');
-    // fall back to localStorage
-    try { const ls = localStorage.getItem('vt_v3'); if(ls) S = {...defState(),...JSON.parse(ls)}; } catch(_){}
   }
   renderAll();
 }
