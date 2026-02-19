@@ -647,24 +647,38 @@ async function loadFromSupabase() {
 async function saveToSupabase() {
   setSyncStatus('saving');
   const value = JSON.stringify(S);
-  // also save to localStorage as fallback
   try { localStorage.setItem('vt_v3', value); } catch(_){}
   try {
-    // upsert
-    const res = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
-      method: 'POST',
+    // Try PATCH first (update existing row)
+    const patch = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?key=eq.${SB_ROW_KEY}`, {
+      method: 'PATCH',
       headers: {
         'apikey': SB_KEY,
         'Authorization': 'Bearer ' + SB_KEY,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates',
+        'Prefer': 'return=representation',
       },
-      body: JSON.stringify({ key: SB_ROW_KEY, value })
+      body: JSON.stringify({ value })
     });
-    if (!res.ok) throw new Error('save failed');
+    if (!patch.ok) throw new Error('patch failed');
+    const patched = await patch.json();
+    // If no rows were updated, insert a new one
+    if (!patched || patched.length === 0) {
+      const post = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key: SB_ROW_KEY, value })
+      });
+      if (!post.ok) throw new Error('insert failed');
+    }
     setSyncStatus('ok');
   } catch(e) {
     setSyncStatus('err', 'save failed');
+    console.error('Supabase save error:', e);
   }
 }
 
