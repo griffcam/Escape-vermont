@@ -310,24 +310,26 @@ select{cursor:pointer} select option{background:var(--s2)}
       </div>
       <div id="d-milestones"></div>
     </div>
-    <div class="card" style="margin-bottom:14px">
-      <div class="ch" style="border-bottom:none;padding:10px 15px">
-        <div class="ct">Sobriety</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1;color:var(--gold)" id="d-streak">0</span>
-          <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3)">days sober</span>
-          <button class="btn-ghost" onclick="go('sob')">Log →</button>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="ch" style="border-bottom:none;padding:10px 15px">
+          <div class="ct">Sobriety</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1;color:var(--gold)" id="d-streak">0</span>
+            <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3)">days sober</span>
+            <button class="btn-ghost" onclick="go('sob')">Log →</button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="ch"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
-      <div class="todo-input-row">
-        <input type="text" id="todo-input" placeholder="Add a task… e.g. Read Leg &amp; Reg pp. 269-86" onkeydown="if(event.key==='Enter')addTodo()">
-        <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="addTodo()">Add</button>
+      <div class="card">
+        <div class="ch"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
+        <div class="todo-input-row">
+          <input type="text" id="todo-input" placeholder="Add a task… e.g. Read Leg &amp; Reg pp. 269-86" onkeydown="if(event.key==='Enter')addTodo()">
+          <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="addTodo()">Add</button>
+        </div>
+        <div id="todo-list"></div>
+        <div id="todo-empty" class="empty">No tasks. Add something you need to do.</div>
       </div>
-      <div id="todo-list"></div>
-      <div id="todo-empty" class="empty">No tasks. Add something you need to do.</div>
     </div>
     </div>
 
