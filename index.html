@@ -260,6 +260,13 @@ select{cursor:pointer} select option{background:var(--s2)}
 .todo-text{flex:1;font-size:.82rem;cursor:pointer}
 .todo-item.tdone .todo-text{text-decoration:line-through;color:var(--t3)}
 
+
+/* collapsible subs */
+.subs-wrap{display:none}
+.subs-wrap.open{display:block}
+.mi-toggle{font-size:.55rem;color:var(--t3);margin-left:4px;transition:transform .15s;display:inline-block}
+.mi-toggle.open{transform:rotate(90deg)}
+
 </style>
 </head>
 <body>
@@ -598,11 +605,114 @@ const ITEM_SEED = [
   {id:2014,classId:1004,name:'Formal Oral Arguments — Friday afternoon/evening',type:'exam',due:'2026-04-17T17:00',done:false},
 ];
 
+
+const READING_SEED = [
+  // ── CRIMINAL LAW (1003) ── T/Th based on schedule
+  {id:3001,classId:1003,name:'Reading: Text pp. 1-6; MPC Overview (Canvas)',type:'assignment',due:'2026-01-13T09:00',done:false},
+  {id:3002,classId:1003,name:'Reading: Text pp. 38-45',type:'assignment',due:'2026-01-15T09:00',done:false},
+  {id:3003,classId:1003,name:'Reading: Text pp. 76-83; Virgin Islands v. Wells',type:'assignment',due:'2026-01-20T09:00',done:false},
+  {id:3004,classId:1003,name:'Reading: Text pp. 6-38; Baughman article; Punishment Theory (Canvas)',type:'assignment',due:'2026-01-22T09:00',done:false},
+  {id:3005,classId:1003,name:'Reading: Text pp. 107-134 (Proportionality)',type:'assignment',due:'2026-01-27T09:00',done:false},
+  {id:3006,classId:1003,name:'Reading: Text pp. 147-161 (Actus Reus)',type:'assignment',due:'2026-01-29T09:00',done:false},
+  {id:3007,classId:1003,name:'Reading: Text pp. 161-176 (Omissions)',type:'assignment',due:'2026-02-03T09:00',done:false},
+  {id:3008,classId:1003,name:'Reading: Text pp. 176-195; Maldonado; State v. Barger',type:'assignment',due:'2026-02-05T09:00',done:false},
+  {id:3009,classId:1003,name:'Reading: Text pp. 197-211; MPC §2.02 (Mens Rea)',type:'assignment',due:'2026-02-10T09:00',done:false},
+  {id:3010,classId:1003,name:'Reading: Text pp. 211-251 (Specific/General Intent)',type:'assignment',due:'2026-02-17T09:00',done:false},
+  {id:3011,classId:1003,name:'Reading: Text pp. 251-275 (Mistake of Fact/Law)',type:'assignment',due:'2026-02-19T09:00',done:false},
+  {id:3012,classId:1003,name:'Reading: Text pp. 275-289 (Mistake & Mens Rea)',type:'assignment',due:'2026-02-24T09:00',done:false},
+  {id:3013,classId:1003,name:'Reading: Text pp. 65-73; 301-318 (Stat. Interp. & Causation)',type:'assignment',due:'2026-03-10T09:00',done:false},
+  {id:3014,classId:1003,name:'Reading: Text pp. 319-342 (Intentional Killing)',type:'assignment',due:'2026-03-12T09:00',done:false},
+  {id:3015,classId:1003,name:'Reading: Text pp. 342-377 (Voluntary Manslaughter)',type:'assignment',due:'2026-03-17T09:00',done:false},
+  {id:3016,classId:1003,name:'Reading: Text pp. 389-401 (Involuntary Manslaughter)',type:'assignment',due:'2026-03-19T09:00',done:false},
+  {id:3017,classId:1003,name:'Reading: Text pp. 401-431 (Felony Murder)',type:'assignment',due:'2026-03-24T09:00',done:false},
+  {id:3018,classId:1003,name:'Reading: Text pp. 801-832 (Attempts & Impossibility)',type:'assignment',due:'2026-03-26T09:00',done:false},
+  {id:3019,classId:1003,name:'Reading: Text pp. 833-852 (Accomplice Liability)',type:'assignment',due:'2026-03-31T09:00',done:false},
+  {id:3020,classId:1003,name:'Reading: Text pp. 604-638 (Self-Defense)',type:'assignment',due:'2026-04-02T09:00',done:false},
+  {id:3021,classId:1003,name:'Reading: Text pp. 638-657 (Defense of Others & Property)',type:'assignment',due:'2026-04-07T09:00',done:false},
+  {id:3022,classId:1003,name:'Reading: Text pp. 657-675 (Necessity)',type:'assignment',due:'2026-04-09T09:00',done:false},
+  {id:3023,classId:1003,name:'Reading: Text pp. 675-698 (Duress, Intoxication)',type:'assignment',due:'2026-04-14T09:00',done:false},
+  {id:3024,classId:1003,name:'Reading: Text pp. 698-729 (Insanity)',type:'assignment',due:'2026-04-16T09:00',done:false},
+  {id:3025,classId:1003,name:'Reading: Text pp. 729-761 (Misc. Defenses)',type:'assignment',due:'2026-04-21T09:00',done:false},
+
+  // ── LEG & REG (1001) ── T/Th 11:20
+  {id:3101,classId:1001,name:'Reading: Casebook pp. 3-30 (Intro)',type:'assignment',due:'2026-01-13T11:20',done:false},
+  {id:3102,classId:1001,name:'Reading: Casebook pp. 31-52; Problems 2A & 2B',type:'assignment',due:'2026-01-15T11:20',done:false},
+  {id:3103,classId:1001,name:'Reading: Eskridge pp. 2-25; Casebook pp. 66-77; Problem 2C',type:'assignment',due:'2026-01-20T11:20',done:false},
+  {id:3104,classId:1001,name:'Reading: Casebook pp. 79-103; Problems 3A & 3B',type:'assignment',due:'2026-01-22T11:20',done:false},
+  {id:3105,classId:1001,name:'Reading: Yates v. US; Casebook pp. 119-120',type:'assignment',due:'2026-01-27T11:20',done:false},
+  {id:3106,classId:1001,name:'Reading: Casebook pp. 121-148; Problem 4A (Plain Meaning)',type:'assignment',due:'2026-01-29T11:20',done:false},
+  {id:3107,classId:1001,name:'Reading: Casebook pp. 148-158; Problem 4B (Technical Meaning)',type:'assignment',due:'2026-02-03T11:20',done:false},
+  {id:3108,classId:1001,name:'Reading: Casebook pp. 159-177; Problems 5A & 5B (Punctuation)',type:'assignment',due:'2026-02-05T11:20',done:false},
+  {id:3109,classId:1001,name:'Reading: Casebook pp. 177-190; Problem 5C (Grammar)',type:'assignment',due:'2026-02-10T11:20',done:false},
+  {id:3110,classId:1001,name:'Reading: Casebook pp. 191-209; Milner v. Dept of Navy; Kagan lecture (Textualism)',type:'assignment',due:'2026-02-12T11:20',done:false},
+  {id:3111,classId:1001,name:'Reading: Casebook pp. 209-228 (Purposivism)',type:'assignment',due:'2026-02-17T11:20',done:false},
+  {id:3112,classId:1001,name:'Reading: Casebook pp. 228-267; Problems 6B & 6C (Intentionalism)',type:'assignment',due:'2026-02-19T11:20',done:false},
+  {id:3113,classId:1001,name:'Reading: Casebook pp. 269-286; 300-318; Problem 7A & 7C',type:'assignment',due:'2026-03-10T11:20',done:false},
+  {id:3114,classId:1001,name:'Reading: Casebook pp. 319-335; Problem 8A (Linguistic Canons I)',type:'assignment',due:'2026-03-12T11:20',done:false},
+  {id:3115,classId:1001,name:'Reading: Casebook pp. 336-367; Problem 8B (Noscitur, Ejusdem)',type:'assignment',due:'2026-03-17T11:20',done:false},
+  {id:3116,classId:1001,name:'Reading: Casebook pp. 367-384; PETA v. Miami Seaquarium; Problem 8C',type:'assignment',due:'2026-03-19T11:20',done:false},
+  {id:3117,classId:1001,name:'Reading: Casebook pp. 451-474; Problems 10A & 10B (Harmonizing)',type:'assignment',due:'2026-03-24T11:20',done:false},
+  {id:3118,classId:1001,name:'Reading: CRS Preemption Primer; Club Madonna v. Miami Beach',type:'assignment',due:'2026-03-26T11:20',done:false},
+  {id:3119,classId:1001,name:'Reading: Casebook pp. 495-549; Problem 11B (Legislative History)',type:'assignment',due:'2026-03-31T11:20',done:false},
+  {id:3120,classId:1001,name:'Reading: LOC Compiling Fed. Leg. History; Cornell Leg. History guide',type:'assignment',due:'2026-04-02T11:20',done:false},
+  {id:3121,classId:1001,name:'Reading: Casebook pp. 551-569; Problems 12A & 12B (Purpose)',type:'assignment',due:'2026-04-07T11:20',done:false},
+  {id:3122,classId:1001,name:'Reading: Casebook pp. 287-299; 609-630; Problem 7B & 14A (Constitutional)',type:'assignment',due:'2026-04-09T11:20',done:false},
+  {id:3123,classId:1001,name:'Reading: Casebook pp. 691-718; Problem 16 (Agencies Intro)',type:'assignment',due:'2026-04-14T11:20',done:false},
+  {id:3124,classId:1001,name:'Reading: Casebook pp. 719-743; FCC v. Consumers Research; Problem 17',type:'assignment',due:'2026-04-16T11:20',done:false},
+  {id:3125,classId:1001,name:'Reading: Casebook pp. 753-768 (Legislative Oversight)',type:'assignment',due:'2026-04-21T11:20',done:false},
+  {id:3126,classId:1001,name:'Reading: Casebook pp. 769-784; Slaughter v. Trump',type:'assignment',due:'2026-04-23T11:20',done:false},
+
+  // ── PROPERTY (1002) ── M/W 3:35
+  {id:3201,classId:1002,name:'Reading: Smith et al. pp. 1-18 (Course Intro)',type:'assignment',due:'2026-01-12T15:35',done:false},
+  {id:3202,classId:1002,name:'Reading: Smith et al. pp. 61-81 (Cultural Property)',type:'assignment',due:'2026-01-14T15:35',done:false},
+  {id:3203,classId:1002,name:'Reading: Smith et al. pp. 83-94 (Finders)',type:'assignment',due:'2026-01-21T15:35',done:false},
+  {id:3204,classId:1002,name:'Reading: Smith et al. pp. 187-195 (Trespass & Right to Exclude)',type:'assignment',due:'2026-01-26T15:35',done:false},
+  {id:3205,classId:1002,name:'Reading: Smith et al. pp. 207-215 (Adverse Possession)',type:'assignment',due:'2026-01-28T15:35',done:false},
+  {id:3206,classId:1002,name:'Reading: Smith et al. pp. 215-229 (Adverse Possession cont'd)',type:'assignment',due:'2026-02-02T15:35',done:false},
+  {id:3207,classId:1002,name:'Reading: Smith et al. pp. 253-265 (IP Foundations)',type:'assignment',due:'2026-02-04T15:35',done:false},
+  {id:3208,classId:1002,name:'Reading: Smith et al. pp. 265-280 (IP cont'd)',type:'assignment',due:'2026-02-09T15:35',done:false},
+  {id:3209,classId:1002,name:'Reading: Smith et al. pp. 361-369 (Fee Simple Absolute)',type:'assignment',due:'2026-02-11T15:35',done:false},
+  {id:3210,classId:1002,name:'Reading: Smith et al. pp. 369-382 (Fee Simple Defeasible)',type:'assignment',due:'2026-02-16T15:35',done:false},
+  {id:3211,classId:1002,name:'Reading: Smith et al. pp. 382-396 (Life Estates)',type:'assignment',due:'2026-02-18T15:35',done:false},
+  {id:3212,classId:1002,name:'Reading: Smith et al. pp. 407-416 (Reversion & Remainder)',type:'assignment',due:'2026-02-23T15:35',done:false},
+  {id:3213,classId:1002,name:'Reading: Smith et al. pp. 416-423 (Right of Entry & Possibility of Reverter) — recorded class',type:'assignment',due:'2026-02-25T15:35',done:false},
+  {id:3214,classId:1002,name:'Reading: Smith et al. pp. 424-434 (Executory Interests)',type:'assignment',due:'2026-03-09T15:35',done:false},
+  {id:3215,classId:1002,name:'Reading: Smith et al. pp. 451-452; 459-471 (Cotenancy)',type:'assignment',due:'2026-03-11T15:35',done:false},
+  {id:3216,classId:1002,name:'Reading: Smith et al. pp. 471-479 (Joint Tenancy)',type:'assignment',due:'2026-03-16T15:35',done:false},
+  {id:3217,classId:1002,name:'Reading: Smith et al. pp. 563-574 (Leasehold Estates) — recorded class',type:'assignment',due:'2026-03-18T15:35',done:false},
+  {id:3218,classId:1002,name:'Reading: Smith et al. pp. 574-595 (Condition of Premises)',type:'assignment',due:'2026-03-23T15:35',done:false},
+  {id:3219,classId:1002,name:'Reading: Smith et al. pp. 601-619 (Tenant Use & Landlord Remedies)',type:'assignment',due:'2026-03-25T15:35',done:false},
+  {id:3220,classId:1002,name:'Reading: Smith et al. pp. 633-652 (Contracts, Deeds, Mortgages)',type:'assignment',due:'2026-03-30T15:35',done:false},
+  {id:3221,classId:1002,name:'Reading: Smith et al. pp. 653-676 (Property Quality & Recording)',type:'assignment',due:'2026-04-01T15:35',done:false},
+  {id:3222,classId:1002,name:'No reading — Real Estate Review class',type:'assignment',due:'2026-04-06T15:35',done:false},
+  {id:3223,classId:1002,name:'Reading: Smith et al. pp. 723-735 (Easements — Creation & Scope)',type:'assignment',due:'2026-04-08T15:35',done:false},
+  {id:3224,classId:1002,name:'Reading: Smith et al. pp. 742-755 (Non-Express Easements)',type:'assignment',due:'2026-04-13T15:35',done:false},
+  {id:3225,classId:1002,name:'Reading: Smith et al. pp. 763-770; 774-789; 161-172 (Covenants)',type:'assignment',due:'2026-04-15T15:35',done:false},
+  {id:3226,classId:1002,name:'Reading: Smith et al. pp. 791-810 (Intro to Zoning)',type:'assignment',due:'2026-04-20T15:35',done:false},
+  {id:3227,classId:1002,name:'Reading: Smith et al. pp. 810-825 (Zoning cont'd)',type:'assignment',due:'2026-04-22T15:35',done:false},
+
+  // ── LRW II (1004) ── M/W
+  {id:3301,classId:1004,name:'Reading: Brown v. Board of Education; Writing for Law Practice excerpt; Canvas readings',type:'assignment',due:'2026-01-12T09:00',done:false},
+  {id:3302,classId:1004,name:'Reading: Coughlin Ch. 19 (Persuasive Writing); Coughlin Ch. 3; Brown brief',type:'assignment',due:'2026-01-14T09:00',done:false},
+  {id:3303,classId:1004,name:'Reading: Vorenberg chapters on Rule Explanation & Rule Application',type:'assignment',due:'2026-01-21T09:00',done:false},
+  {id:3304,classId:1004,name:'Reading: Review entire case file; find 2 relevant cases',type:'assignment',due:'2026-01-26T09:00',done:false},
+  {id:3305,classId:1004,name:'Reading: Review entire case file; find 2 relevant cases',type:'assignment',due:'2026-01-28T09:00',done:false},
+  {id:3306,classId:1004,name:'Reading: Continue research — identify 4 key cases',type:'assignment',due:'2026-02-02T09:00',done:false},
+  {id:3307,classId:1004,name:'Reading: Continue reading cases; draft outline of legal arguments',type:'assignment',due:'2026-02-04T09:00',done:false},
+  {id:3308,classId:1004,name:'Reading: Continue working on memo',type:'assignment',due:'2026-02-16T09:00',done:false},
+  {id:3309,classId:1004,name:'Reading: Complete draft of arguments (bring to class)',type:'assignment',due:'2026-02-18T09:00',done:false},
+  {id:3310,classId:1004,name:'Reading: Continue memo; read Facts Section article (Canvas)',type:'assignment',due:'2026-02-23T09:00',done:false},
+  {id:3311,classId:1004,name:'Reading: Coughlin Ch. 19, Editing and Polishing; sign up for conference',type:'assignment',due:'2026-02-25T09:00',done:false},
+  {id:3312,classId:1004,name:'Reading: Bring most recent draft to class',type:'assignment',due:'2026-03-09T09:00',done:false},
+  {id:3313,classId:1004,name:'Reading: Continue memo revisions; re-read Coughlin Ch. 19',type:'assignment',due:'2026-03-23T09:00',done:false},
+  {id:3314,classId:1004,name:'Reading: Continue memo revisions; read Oral Argument article (Canvas)',type:'assignment',due:'2026-03-25T09:00',done:false},
+];
+
 function defState() {
   return {
     soberSince:null, logs:{},
     classes:JSON.parse(JSON.stringify(CLASS_SEED)),
-    items:JSON.parse(JSON.stringify(ITEM_SEED)),
+    items:[...JSON.parse(JSON.stringify(ITEM_SEED)),...JSON.parse(JSON.stringify(READING_SEED))],
     milestones:JSON.parse(JSON.stringify(MS_DEF)),
     workouts:{}, notes:'', selColor:COLORS[0], jobs:[],
   };
@@ -760,8 +870,16 @@ function renderMI(m,isNxt) {
   const hasSubs=m.subs&&m.subs.length>0;
   const sd=hasSubs?m.subs.filter(s=>s.done).length:0, st=hasSubs?m.subs.length:0;
   const sc=hasSubs?`<span class="sub-count">${sd}/${st}</span>`:'';
-  const subsHtml=hasSubs?`<div class="subs-wrap">${m.subs.map(s=>`<div class="sub-item ${s.done?'sdone':''}" onclick="toggleSub(${m.id},${s.id})"><div class="sbox"><div class="schk"></div></div><span class="sname">${esc(s.name)}</span></div>`).join('')}</div>`:'';
-  return `<div><div class="mi ${m.done?'mdone':''} ${isNxt?'mnext':''}" onclick="toggleM(${m.id})"><div class="mdot"></div><div class="mname">${esc(m.name)}${sc}</div><div class="mdate">${esc(m.date)}</div></div>${subsHtml}</div>`;
+  const subsOpen=m.subsOpen?'open':'';
+  const toggleIcon=hasSubs?`<span class="mi-toggle ${subsOpen}" id="mit-${m.id}">▶</span>`:'';
+  const subsHtml=hasSubs?`<div class="subs-wrap ${subsOpen}" id="subs-${m.id}">${m.subs.map(s=>`<div class="sub-item ${s.done?'sdone':''}" onclick="toggleSub(${m.id},${s.id})"><div class="sbox"><div class="schk"></div></div><span class="sname">${esc(s.name)}</span></div>`).join('')}</div>`:'';
+  const clickHandler=hasSubs?`toggleSubsOpen(${m.id})`:`toggleM(${m.id})`;
+  return `<div><div class="mi ${m.done?'mdone':''} ${isNxt?'mnext':''}" onclick="${clickHandler}"><div class="mdot" onclick="event.stopPropagation();toggleM(${m.id})"></div><div class="mname">${esc(m.name)}${sc}${toggleIcon}</div><div class="mdate">${esc(m.date)}</div></div>${subsHtml}</div>`;
+}
+
+function toggleSubsOpen(id){
+  S.milestones=S.milestones.map(m=>m.id===id?{...m,subsOpen:!m.subsOpen}:m);
+  save(); renderAll();
 }
 
 function toggleM(id){ S.milestones=S.milestones.map(m=>m.id===id?{...m,done:!m.done}:m); save(); renderAll(); }
