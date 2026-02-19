@@ -648,7 +648,6 @@ async function loadFromSupabase() {
     const rows = await res.json();
     if (rows && rows.length > 0) {
       const loaded = JSON.parse(rows[0].value);
-      // Only merge fields that represent user changes, not seed data
       S.soberSince = loaded.soberSince ?? S.soberSince;
       S.logs = loaded.logs ?? S.logs;
       S.workouts = loaded.workouts ?? S.workouts;
@@ -656,35 +655,27 @@ async function loadFromSupabase() {
       S.jobs = loaded.jobs ?? S.jobs;
       S.todos = loaded.todos ?? S.todos;
       S.selColor = loaded.selColor ?? S.selColor;
-      // Merge milestones: preserve done state but keep seed structure
-      if (loaded.milestones) {
+      // Restore milestone done states (new slim format)
+      if (loaded.milestoneDone) {
         const doneMap = {};
-        loaded.milestones.forEach(m => {
-          doneMap[m.id] = { done: m.done, subsOpen: m.subsOpen };
-          if (m.subs) m.subs.forEach(s => { doneMap[s.id] = { done: s.done }; });
+        loaded.milestoneDone.forEach(m => {
+          doneMap[m.id] = {done:m.done, subsOpen:m.subsOpen};
+          (m.subs||[]).forEach(s => { doneMap[s.id] = {done:s.done}; });
         });
-        S.milestones = S.milestones.map(m => {
-          const saved = doneMap[m.id] || {};
-          return { ...m, done: saved.done ?? m.done, subsOpen: saved.subsOpen ?? false,
-            subs: m.subs ? m.subs.map(s => ({ ...s, done: (doneMap[s.id]||{}).done ?? s.done })) : m.subs };
-        });
+        S.milestones = S.milestones.map(m => ({
+          ...m, done: doneMap[m.id]?.done ?? m.done, subsOpen: doneMap[m.id]?.subsOpen ?? false,
+          subs: m.subs ? m.subs.map(s => ({...s, done: doneMap[s.id]?.done ?? s.done})) : m.subs
+        }));
       }
-      // Merge items: preserve done state by id
-      if (loaded.items) {
-        const itemDone = {};
-        loaded.items.forEach(i => { itemDone[i.id] = i.done; });
-        // Keep seed items with saved done state, then add any user-created items
-        const seedIds = new Set(S.items.map(i => i.id));
-        S.items = S.items.map(i => ({ ...i, done: itemDone[i.id] ?? i.done }));
-        const userItems = loaded.items.filter(i => !seedIds.has(i.id));
-        S.items = [...S.items, ...userItems];
+      // Restore item done states (new slim format)
+      if (loaded.itemDone) {
+        const doneMap = {};
+        loaded.itemDone.forEach(i => { doneMap[i.id] = i.done; });
+        S.items = S.items.map(i => ({...i, done: doneMap[i.id] ?? i.done}));
       }
-      // Merge classes: keep seed + any user-added classes
-      if (loaded.classes) {
-        const seedClsIds = new Set(S.classes.map(c => c.id));
-        const userCls = loaded.classes.filter(c => !seedClsIds.has(c.id));
-        S.classes = [...S.classes, ...userCls];
-      }
+      // Re-add user-created classes and items
+      if (loaded.userClasses) S.classes = [...S.classes, ...loaded.userClasses];
+      if (loaded.userItems) S.items = [...S.items, ...loaded.userItems];
     }
     setSyncStatus('ok');
   } catch(e) {
@@ -695,8 +686,23 @@ async function loadFromSupabase() {
 
 async function saveToSupabase() {
   setSyncStatus('saving');
-  const value = JSON.stringify(S);
-  try { localStorage.setItem('vt_v3', value); } catch(_){}
+  // Only save user-generated state — never save seed data (classes/items/milestones structure)
+  const toSave = {
+    soberSince: S.soberSince,
+    logs: S.logs,
+    workouts: S.workouts,
+    notes: S.notes,
+    jobs: S.jobs,
+    todos: S.todos,
+    selColor: S.selColor,
+    // Save done states only, not full structure
+    milestoneDone: S.milestones.map(m => ({id:m.id, done:m.done, subsOpen:m.subsOpen, subs:(m.subs||[]).map(s=>({id:s.id,done:s.done}))})),
+    itemDone: S.items.map(i => ({id:i.id, done:i.done})),
+    // User-added classes and items (ids > 2000000 are user-created)
+    userClasses: S.classes.filter(c => c.id > 2000000),
+    userItems: S.items.filter(i => i.id > 2000000),
+  };
+  const value = JSON.stringify(toSave);
   try {
     // Try PATCH first (update existing row)
     const patch = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?key=eq.${SB_ROW_KEY}`, {
