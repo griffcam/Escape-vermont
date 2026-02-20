@@ -267,6 +267,16 @@ select{cursor:pointer} select option{background:var(--s2)}
 .mi-toggle{font-size:.55rem;color:var(--t3);margin-left:4px;transition:transform .15s;display:inline-block}
 .mi-toggle.open{transform:rotate(90deg)}
 
+
+.sched-row{display:grid;grid-template-columns:44px 1fr;min-height:22px}
+.sched-hour{border-top:1px solid var(--b1)}
+.sched-half{border-top:1px solid rgba(255,255,255,.04)}
+.sched-time{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--t3);padding-top:3px;text-align:right;padding-right:8px}
+.sched-content{position:relative;padding:1px 0}
+.sched-note-input{width:100%;background:transparent;border:none;color:var(--t2);font-size:.72rem;font-family:'DM Mono',monospace;padding:2px 6px;outline:none}
+.sched-note-input:focus{background:rgba(255,255,255,.04);border-radius:3px}
+.sched-cls{font-size:.65rem;color:var(--t2);padding:2px 6px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 </style>
 </head>
 <body>
@@ -333,6 +343,19 @@ select{cursor:pointer} select option{background:var(--s2)}
     </div>
     </div>
 
+    <div class="card gfull" id="sched-wrap">
+      <div class="ch" style="cursor:pointer" onclick="toggleSched()">
+        <div class="ct">Today's Schedule</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3)" id="sched-dow"></span>
+          <span id="sched-toggle" style="color:var(--t3);font-size:.7rem">▼</span>
+        </div>
+      </div>
+      <div id="sched-body">
+        <div id="sched-grid" style="max-height:420px;overflow-y:auto;padding:0 8px"></div>
+        <div id="sched-due" style="padding:10px 15px;border-top:1px solid var(--b1)"></div>
+      </div>
+    </div>
     <div class="card gfull">
       <div class="ch"><div class="ct">Notes</div></div>
       <textarea class="notes-ta" id="notes-ta" placeholder="Brain dump..."></textarea>
@@ -696,9 +719,88 @@ const READING_SEED = [
   {id:3226,classId:1002,name:'Reading: Smith et al. pp. 791-810 (Intro to Zoning)',type:'assignment',due:'2026-04-20T15:35',done:false},
   {id:3227,classId:1002,name:"Reading: Smith et al. pp. 810-825 (Zoning cont'd)",type:'assignment',due:'2026-04-22T15:35',done:false},
 ];
+
+const CLASS_SCHEDULE = {
+  // classId: [{day:1=Mon,2=Tue,...,5=Fri, start:'HH:MM', end:'HH:MM', label}]
+  1001: [{day:2,start:'11:20',end:'12:35',label:'Leg & Reg'},{day:4,start:'11:20',end:'12:35',label:'Leg & Reg'}],
+  1002: [{day:1,start:'15:35',end:'17:35',label:'Property'},{day:3,start:'15:35',end:'17:35',label:'Property'}],
+  1003: [{day:2,start:'09:00',end:'10:15',label:'Criminal Law'},{day:4,start:'09:00',end:'10:15',label:'Criminal Law'}],
+  1004: [{day:1,start:'09:00',end:'10:15',label:'LRW II'},{day:3,start:'09:00',end:'10:15',label:'LRW II'}],
+};
+const SCHED_START=7, SCHED_END=23; // 7am-11pm, 30min slots
+
+function timeToSlot(t){const[h,m]=t.split(':').map(Number);return(h-SCHED_START)*2+(m>=30?1:0);}
+function slotToLabel(s){const h=Math.floor(s/2)+SCHED_START,m=s%2?'30':'00';return (h>12?h-12:h)+':'+(m)+(h>=12?'pm':'am');}
+function todayDow(){return new Date().getDay();} // 0=Sun,1=Mon,...
+
+function renderSchedule(){
+  const wrap=document.getElementById('sched-wrap');
+  if(!wrap) return;
+  const dowNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const dowEl=document.getElementById('sched-dow');
+  if(dowEl) dowEl.textContent=dowNames[todayDow()];
+  const collapsed=S.schedCollapsed;
+  document.getElementById('sched-toggle').textContent=collapsed?'▶':'▼';
+  document.getElementById('sched-body').style.display=collapsed?'none':'block';
+  if(collapsed) return;
+
+  const dow=todayDow();
+  const slots=SCHED_END*2-SCHED_START*2; // total 30-min slots
+  const grid=Array(slots).fill(null).map((_,i)=>({slot:i,classes:[],note:S.schedNotes?.[today()]?.[i]||''}));
+
+  // Fill class blocks
+  Object.entries(CLASS_SCHEDULE).forEach(([cid,days])=>{
+    const cls=clsById(Number(cid));
+    if(!cls) return;
+    days.forEach(d=>{
+      if(d.day!==dow) return;
+      const s=timeToSlot(d.start), e=timeToSlot(d.end);
+      for(let i=s;i<e;i++) grid[i].classes.push({cls,start:d.start,end:d.end,spanStart:i===s,span:e-s});
+    });
+  });
+
+  // Today's due items
+  const todayItems=S.items.filter(i=>!i.done&&i.due&&i.due.startsWith(today()));
+
+  const el=document.getElementById('sched-grid');
+  el.innerHTML=grid.map((g,i)=>{
+    const isHour=i%2===0;
+    const lbl=isHour?slotToLabel(i):'';
+    const clsBlock=g.classes.length?g.classes.map(c=>c.spanStart?`<div class="sched-cls" style="background:${c.cls.color}22;border-left:3px solid ${c.cls.color};grid-row:span ${c.span}" title="${c.cls.name} ${c.start}-${c.end}">${c.cls.name}</div>`:'').join(''):'';
+    const noteVal=g.note||'';
+    return `<div class="sched-row ${isHour?'sched-hour':'sched-half'}">
+      <div class="sched-time">${lbl}</div>
+      <div class="sched-content">
+        ${clsBlock||`<input class="sched-note-input" type="text" placeholder="" value="${esc(noteVal)}" onchange="saveSchedNote(${i},this.value)">`}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Show today's due items below grid
+  const dueEl=document.getElementById('sched-due');
+  if(todayItems.length){
+    dueEl.innerHTML='<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Due Today</div>'+
+    todayItems.map(i=>{const cls=clsById(i.classId);return `<div style="display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--b1)"><span style="width:8px;height:8px;border-radius:50%;background:${cls?cls.color:'#555'};flex-shrink:0;display:inline-block"></span><span style="font-size:.75rem;color:var(--t2)">${esc(i.name)}</span></div>`;}).join('');
+  } else {
+    dueEl.innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--t3)">Nothing due today.</div>';
+  }
+}
+
+function saveSchedNote(slot,val){
+  if(!S.schedNotes) S.schedNotes={};
+  if(!S.schedNotes[today()]) S.schedNotes[today()]={};
+  S.schedNotes[today()][slot]=val;
+  save();
+}
+
+function toggleSched(){
+  S.schedCollapsed=!S.schedCollapsed;
+  save(); renderSchedule();
+}
+
 function defState() {
   return {
-    soberSince:null, logs:{},
+    soberSince:null, logs:{}, hideCompletedItems:false, schedNotes:{}, schedCollapsed:false,
     classes:JSON.parse(JSON.stringify(CLASS_SEED)),
     items:[...JSON.parse(JSON.stringify(ITEM_SEED)),...JSON.parse(JSON.stringify(READING_SEED))],
     milestones:JSON.parse(JSON.stringify(MS_DEF)),
@@ -920,14 +1022,20 @@ function toggleSub(pid,sid){
 // ═══════════════════════════════════════════════════════
 //  ACADEMICS
 // ═══════════════════════════════════════════════════════
+function toggleHideDone(){S.hideCompletedItems=!S.hideCompletedItems;save();renderAcad();}
 function renderAcad() {
   const cont=document.getElementById('cls-list'), empty=document.getElementById('cls-empty');
+  // Update toggle button label if present
+  const hdb=document.getElementById('hide-done-btn');
+  if(hdb) hdb.textContent=S.hideCompletedItems?'Show completed':'Hide completed';
   if(!S.classes.length){cont.innerHTML='';empty.style.display='block';}
   else {
     empty.style.display='none';
     cont.innerHTML=S.classes.map(cls=>{
-      const its=S.items.filter(i=>i.classId===cls.id), pend=its.filter(i=>!i.done).length;
-      return `<div class="cls-card open" id="cls-${cls.id}"><div class="cls-hdr" onclick="toggleCls(${cls.id})"><div class="cls-dot" style="background:${cls.color}"></div><div class="cls-name">${esc(cls.name)}</div><div class="cls-pend">${pend} pending</div><button class="btn-ghost" style="margin-left:7px" onclick="event.stopPropagation();openItemModal(${cls.id},'assignment')">+ Add</button><button class="btn btn-sky" style="margin-left:4px;font-size:.65rem;padding:4px 9px" onclick="event.stopPropagation();trigSyl(${cls.id})">⬆ Syllabus</button><button class="btn-icon" style="margin-left:4px" onclick="event.stopPropagation();delCls(${cls.id})">✕</button><div class="cls-chev">▶</div></div><div class="cls-body">${its.length?its.map(renderItem).join(''):'<div class="empty">No items yet.</div>'}</div></div>`;
+      const allIts=S.items.filter(i=>i.classId===cls.id);
+      const its=S.hideCompletedItems?allIts.filter(i=>!i.done):allIts;
+      const pend=allIts.filter(i=>!i.done).length;
+      return `<div class="cls-card open" id="cls-${cls.id}"><div class="cls-hdr" onclick="toggleCls(${cls.id})"><div class="cls-dot" style="background:${cls.color}"></div><div class="cls-name">${esc(cls.name)}</div><div class="cls-pend">${pend} pending</div><button class="btn-ghost" style="margin-left:7px" onclick="event.stopPropagation();openItemModal(${cls.id},'assignment')">+ Add</button><button class="btn btn-sky" style="margin-left:4px;font-size:.65rem;padding:4px 9px" onclick="event.stopPropagation();trigSyl(${cls.id})">⬆ Syllabus</button><button class="btn-icon" style="margin-left:4px" onclick="event.stopPropagation();delCls(${cls.id})">✕</button><div class="cls-chev">▶</div></div><div class="cls-body">${its.length?its.map(renderItem).join(''):'<div class="empty">'+(S.hideCompletedItems?'All done! (or no items)':'No items yet.')+'</div>'}</div></div>`;
     }).join('');
   }
   const td=S.items.filter(i=>i.type==='transfer');
@@ -1056,6 +1164,11 @@ function renderCal(){
   for(let d=new Date(start);d<=now;d.setDate(d.getDate()+1)){const k=d.toISOString().split('T')[0],lg=S.logs[k],n=d.getDate();let c='';if(lg){if(!lg.drank)c='csob';else if(lg.feel==='bad')c='cbad';else if(lg.feel==='meh')c='cmeh';else c='cok';}h+=`<div class="cal-cell ${c} ${k===tk?'ctoday':''} ${lg?'hlog':''}" title="${k}">${n}</div>`;}
   grid.innerHTML=h;
 }
+function deleteLog(dateKey){
+  if(!confirm('Delete entry for '+fmtD(dateKey)+'?')) return;
+  delete S.logs[dateKey];
+  save(); renderSob(); renderLogHist(); renderDash();
+}
 function renderLogHist(){
   const entries=Object.entries(S.logs).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
   const listEl=document.getElementById('log-hist'),noEl=document.getElementById('log-empty');
@@ -1063,7 +1176,7 @@ function renderLogHist(){
   if(!entries.length){noEl.style.display='block';listEl.innerHTML='';return;}
   noEl.style.display='none';
   const fm={good:'lf-good',fine:'lf-fine',meh:'lf-meh',bad:'lf-bad'};
-  listEl.innerHTML=entries.map(([k,lg])=>{const tb=lg.drank?`<span class="ltb lt-drank">drank${lg.who?' · '+lg.who:''}</span>`:'<span class="ltb lt-sob">sober</span>';const fb=lg.feel?`<span class="ltb ${fm[lg.feel]||''}">${lg.feel}</span>`:'';return `<div class="lentry"><div class="lentry-top"><span class="ldate">${fmtD(k)}</span>${tb}${fb}</div>${lg.note?`<div class="lnote">"${esc(lg.note)}"</div>`:''}</div>`;}).join('');
+  listEl.innerHTML=entries.map(([k,lg])=>{const tb=lg.drank?`<span class="ltb lt-drank">drank${lg.who?' · '+lg.who:''}</span>`:'<span class="ltb lt-sob">sober</span>';const fb=lg.feel?`<span class="ltb ${fm[lg.feel]||''}">${lg.feel}</span>`:'';return `<div class="lentry" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div><div class="lentry-top"><span class="ldate">${fmtD(k)}</span>${tb}${fb}</div>${lg.note?`<div class="lnote">"${esc(lg.note)}"</div>`:''}</div><button onclick="deleteLog('${k}')" style="background:none;border:none;color:#555;cursor:pointer;font-size:.75rem;padding:2px 5px;flex-shrink:0" title="Delete entry">✕</button></div>`;}).join('');
 }
 
 // ═══════════════════════════════════════════════════════
