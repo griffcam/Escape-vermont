@@ -779,10 +779,15 @@ function renderSchedule(){
   // Show today's due items below grid
   const dueEl=document.getElementById('sched-due');
   if(todayItems.length){
-    dueEl.innerHTML='<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Due Today</div>'+
-    todayItems.map(i=>{const cls=clsById(i.classId);return `<div style="display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--b1)"><span style="width:8px;height:8px;border-radius:50%;background:${cls?cls.color:'#555'};flex-shrink:0;display:inline-block"></span><span style="font-size:.75rem;color:var(--t2)">${esc(i.name)}</span></div>`;}).join('');
+    const hdr=`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Due Today</div>`;
+    const rows=todayItems.map(i=>{
+      const cls=clsById(i.classId);
+      const dot=`<span style="width:8px;height:8px;border-radius:50%;background:${cls?cls.color:'#555'};flex-shrink:0;display:inline-block"></span>`;
+      return `<div style="display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--b1)">${dot}<span style="font-size:.75rem;color:var(--t2)">${esc(i.name)}</span></div>`;
+    }).join('');
+    dueEl.innerHTML=hdr+rows;
   } else {
-    dueEl.innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:.65rem;color:var(--t3)">Nothing due today.</div>';
+    dueEl.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--t3)">Nothing due today.</div>`;
   }
 }
 
