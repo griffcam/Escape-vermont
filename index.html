@@ -805,7 +805,7 @@ function renderDash() {
 
   document.getElementById('d-streak').textContent=sobDays();
   const tl=S.logs[today()];
-  document.getElementById('d-tlog').textContent=tl?(tl.drank?`Drank (${tl.who||'solo'}) · felt ${tl.feel||'?'}`:'Stayed sober'+(tl.feel?' · felt '+tl.feel:'')):'No entry yet today';
+  const tlogEl=document.getElementById('d-tlog'); if(tlogEl) tlogEl.textContent=tl?(tl.drank?`Drank (${tl.who||'solo'}) · felt ${tl.feel||'?'}`:'Stayed sober'+(tl.feel?' · felt '+tl.feel:'')):'No entry yet today';
   document.getElementById('notes-ta').value=S.notes||'';
 }
 
