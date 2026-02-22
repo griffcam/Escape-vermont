@@ -630,6 +630,22 @@ const ITEM_SEED = [
   {id:2012,classId:1004,name:'Formal Oral Arguments — Tuesday evening',type:'exam',due:'2026-04-14T18:00',done:false},
   {id:2013,classId:1004,name:'Formal Oral Arguments — Thursday evening',type:'exam',due:'2026-04-16T18:00',done:false},
   {id:2014,classId:1004,name:'Formal Oral Arguments — Friday afternoon/evening',type:'exam',due:'2026-04-17T17:00',done:false},
+  // ── TRANSFER APP DEADLINES ──────────────────────────────────────────────────
+  {id:4001,classId:null,name:'NYU — App opens',type:'transfer',due:'2026-05-01T09:00',done:false},
+  {id:4002,classId:null,name:'NYU — Deadline',type:'transfer',due:'2026-06-15T23:59',done:false},
+  {id:4003,classId:null,name:'Fordham — App opens',type:'transfer',due:'2026-03-15T09:00',done:false},
+  {id:4004,classId:null,name:'Fordham — Deadline',type:'transfer',due:'2026-06-15T23:59',done:false},
+  {id:4005,classId:null,name:'Cardozo — Priority deadline',type:'transfer',due:'2026-04-01T23:59',done:false},
+  {id:4006,classId:null,name:'Cardozo — Final deadline',type:'transfer',due:'2026-08-10T23:59',done:false},
+  {id:4007,classId:null,name:'Brooklyn Law — Deadline',type:'transfer',due:'2026-08-01T23:59',done:false},
+  {id:4008,classId:null,name:"St. John's — Priority deadline",type:'transfer',due:'2026-03-15T23:59',done:false},
+  {id:4009,classId:null,name:"St. John's — Final deadline",type:'transfer',due:'2026-07-15T23:59',done:false},
+  {id:4010,classId:null,name:'Rutgers — App opens',type:'transfer',due:'2026-05-01T09:00',done:false},
+  {id:4011,classId:null,name:'Rutgers — Deadline',type:'transfer',due:'2026-08-01T23:59',done:false},
+  {id:4012,classId:null,name:'Seton Hall — Deadline (rolling)',type:'transfer',due:'2026-07-15T23:59',done:false},
+  {id:4013,classId:null,name:'CUNY — App opens',type:'transfer',due:'2026-04-01T09:00',done:false},
+  {id:4014,classId:null,name:'CUNY — Deadline',type:'transfer',due:'2026-07-01T23:59',done:false},
+  {id:4015,classId:null,name:'NYLS — Deadline',type:'transfer',due:'2026-07-15T23:59',done:false},
 ];
 
 
@@ -1002,13 +1018,28 @@ function renderDash() {
   document.getElementById('notes-ta').value=S.notes||'';
 }
 
+const SCHOOL_DEADLINES = {
+  'NYU':         {opens:'May 1',  deadline:'Jun 15'},
+  'Fordham':     {opens:'Mar 15', deadline:'Jun 15'},
+  'Cardozo':     {opens:'now',    deadline:'Aug 10'},
+  'Brooklyn Law':{opens:'now',    deadline:'Aug 1'},
+  "St. John's":  {opens:'now',    deadline:'Jul 15'},
+  'Rutgers':     {opens:'May 1',  deadline:'Aug 1'},
+  'Seton Hall':  {opens:'now',    deadline:'~Jul 15'},
+  'CUNY':        {opens:'Apr 1',  deadline:'Jul 1'},
+  'NYLS':        {opens:'now',    deadline:'Jul 15'},
+};
 function renderMI(m,isNxt) {
   const hasSubs=m.subs&&m.subs.length>0;
   const sd=hasSubs?m.subs.filter(s=>s.done).length:0, st=hasSubs?m.subs.length:0;
   const sc=hasSubs?`<span class="sub-count">${sd}/${st}</span>`:'';
   const subsOpen=m.subsOpen?'open':'';
   const toggleIcon=hasSubs?`<span class="mi-toggle ${subsOpen}" id="mit-${m.id}">▶</span>`:'';
-  const subsHtml=hasSubs?`<div class="subs-wrap ${subsOpen}" id="subs-${m.id}">${m.subs.map(s=>`<div class="sub-item ${s.done?'sdone':''}" onclick="toggleSub(${m.id},${s.id})"><div class="sbox"><div class="schk"></div></div><span class="sname">${esc(s.name)}</span></div>`).join('')}</div>`:'';
+  const subsHtml=hasSubs?`<div class="subs-wrap ${subsOpen}" id="subs-${m.id}">${m.subs.map(s=>{
+    const dl=SCHOOL_DEADLINES[s.name];
+    const dlHtml=dl?`<span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--t3);margin-left:auto;white-space:nowrap">opens ${dl.opens} · due ${dl.deadline}</span>`:'';
+    return `<div class="sub-item ${s.done?'sdone':''}" onclick="toggleSub(${m.id},${s.id})" style="display:flex;align-items:center;gap:6px"><div class="sbox"><div class="schk"></div></div><span class="sname">${esc(s.name)}</span>${dlHtml}</div>`;
+  }).join('')}</div>`:'';
   const clickHandler=hasSubs?`toggleSubsOpen(${m.id})`:`toggleM(${m.id})`;
   return `<div><div class="mi ${m.done?'mdone':''} ${isNxt?'mnext':''}" onclick="${clickHandler}"><div class="mdot" onclick="event.stopPropagation();toggleM(${m.id})"></div><div class="mname">${esc(m.name)}${sc}${toggleIcon}</div><div class="mdate">${esc(m.date)}</div></div>${subsHtml}</div>`;
 }
