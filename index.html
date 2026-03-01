@@ -277,6 +277,10 @@ select{cursor:pointer} select option{background:var(--s2)}
 .sched-note-input:focus{background:rgba(255,255,255,.04);border-radius:3px}
 .sched-cls{font-size:.65rem;color:var(--t2);padding:2px 6px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+
+.todo-item[draggable="true"]:hover { background: rgba(255,255,255,.03); }
+.todo-drag-over { border-top: 2px solid var(--lime) !important; }
+
 </style>
 </head>
 <body>
@@ -993,8 +997,9 @@ function renderNav() {
 //  DASHBOARD
 // ═══════════════════════════════════════════════════════
 function renderDash() {
-  const up = S.items.filter(i=>!i.done&&i.due).map(i=>({...i,d:daysUntil(i.due)})).filter(i=>i.d>=-1&&i.d<=14).sort((a,b)=>a.d-b.d);
-  document.getElementById('d-dc').textContent = up.length+' upcoming';
+  const up = S.items.filter(i=>!i.done&&i.due).map(i=>({...i,d:daysUntil(i.due)})).filter(i=>i.d<=14).sort((a,b)=>a.d-b.d);
+  const overdue=up.filter(i=>i.d<0).length;
+  document.getElementById('d-dc').textContent = overdue>0?up.length+' items ('+overdue+' overdue)':up.length+' upcoming';
   const cdEl = document.getElementById('d-countdown');
   cdEl.innerHTML = !up.length ? '<div class="empty">No upcoming deadlines.</div>' : up.map(i=>{
     const c=i.d<0?'urg':i.d===0?'urg':i.d<=3?'urg':i.d<=7?'soon':i.d<=14?'ok':'far';
@@ -1301,20 +1306,60 @@ let ui={drank:null,who:null,feel:null,itemClsId:null,itemType:null,sylClsId:null
 // ═══════════════════════════════════════════════════════
 //  TO-DOS
 // ═══════════════════════════════════════════════════════
+let _todoDragId = null;
+
 function renderTodos() {
   const todos = S.todos || [];
   const listEl = document.getElementById('todo-list');
   const emEl = document.getElementById('todo-empty');
-  // sort: undone first, done at bottom
-  const sorted = [...todos].sort((a,b) => a.done===b.done ? 0 : a.done ? 1 : -1);
+  // undone first (in user order), done at bottom
+  const undone = todos.filter(t=>!t.done);
+  const done = todos.filter(t=>t.done);
+  const sorted = [...undone, ...done];
   if (!todos.length) { emEl.style.display='block'; listEl.innerHTML=''; return; }
   emEl.style.display='none';
   listEl.innerHTML = sorted.map(t => `
-    <div class="todo-item ${t.done?'tdone':''}">
+    <div class="todo-item ${t.done?'tdone':''}" draggable="${!t.done}" data-id="${t.id}"
+      ondragstart="todoDragStart(event,${t.id})"
+      ondragover="todoDragOver(event)"
+      ondrop="todoDrop(event,${t.id})"
+      ondragend="todoDragEnd(event)"
+      style="cursor:${t.done?'default':'grab'}">
+      <span style="color:var(--t3);font-size:.7rem;margin-right:4px;user-select:none">${t.done?'':'⠿'}</span>
       <div class="todo-check" onclick="toggleTodo(${t.id})"></div>
       <span class="todo-text" onclick="toggleTodo(${t.id})">${esc(t.text)}</span>
       <div class="btn-icon" onclick="delTodo(${t.id})">✕</div>
     </div>`).join('');
+}
+
+function todoDragStart(e, id) {
+  _todoDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>e.target.style.opacity='0.4', 0);
+}
+function todoDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // highlight drop target
+  document.querySelectorAll('.todo-item').forEach(el=>el.classList.remove('todo-drag-over'));
+  e.currentTarget.classList.add('todo-drag-over');
+}
+function todoDrop(e, targetId) {
+  e.preventDefault();
+  if (_todoDragId === targetId) return;
+  const todos = S.todos || [];
+  const fromIdx = todos.findIndex(t=>t.id===_todoDragId);
+  const toIdx = todos.findIndex(t=>t.id===targetId);
+  if (fromIdx===-1||toIdx===-1) return;
+  const moved = todos.splice(fromIdx,1)[0];
+  todos.splice(toIdx,0,moved);
+  S.todos = todos;
+  save(); renderTodos();
+}
+function todoDragEnd(e) {
+  e.target.style.opacity='';
+  document.querySelectorAll('.todo-item').forEach(el=>el.classList.remove('todo-drag-over'));
+  _todoDragId = null;
 }
 
 function addTodo() {
