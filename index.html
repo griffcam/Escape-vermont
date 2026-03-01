@@ -992,6 +992,7 @@ async function saveToSupabase() {
   console.log('[saveToSupabase FIRED] S.events:', (S.events||[]).length, new Error().stack.split('\n')[1]);
   setSyncStatus('saving');
   // Only save user-generated state — never save seed data (classes/items/milestones structure)
+  console.log('[toSave BUILD] S.events at build time:', (S.events||[]).length, JSON.stringify(S.events));
   const toSave = {
     soberSince: S.soberSince,
     logs: S.logs,
