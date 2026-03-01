@@ -945,6 +945,7 @@ async function loadFromSupabase() {
     const rows = await res.json();
     if (rows && rows.length > 0) {
       const loaded = JSON.parse(rows[0].value);
+      console.log('[LOAD] raw keys from Supabase:', Object.keys(loaded), 'events:', loaded.events?.length ?? 'missing');
       S.soberSince = loaded.soberSince ?? S.soberSince;
       S.logs = loaded.logs ?? S.logs;
       S.workouts = loaded.workouts ?? S.workouts;
@@ -974,6 +975,7 @@ async function loadFromSupabase() {
       if (loaded.userClasses) S.classes = [...S.classes, ...loaded.userClasses];
       if (loaded.userItems) S.items = [...S.items, ...loaded.userItems];
       if (loaded.events) S.events = loaded.events;
+      console.log('[LOAD] events count:', (S.events||[]).length, 'evtCalCollapsed:', S.evtCalCollapsed);
       if (loaded.evtCalCollapsed !== undefined) S.evtCalCollapsed = loaded.evtCalCollapsed;
       if (loaded.deadlinesCollapsed !== undefined) S.deadlinesCollapsed = loaded.deadlinesCollapsed;
       if (loaded.hideCompletedItems !== undefined) S.hideCompletedItems = loaded.hideCompletedItems;
@@ -1004,7 +1006,9 @@ async function saveToSupabase() {
     userClasses: S.classes.filter(c => c.id > 2000000),
     userItems: S.items.filter(i => i.id > 2000000),
   };
+  console.log('[SAVE] events count:', (toSave.events||[]).length, 'sample:', JSON.stringify((toSave.events||[]).slice(0,1)));
   const value = JSON.stringify(toSave);
+  console.log('[SAVE] total payload size:', value.length);
   try {
     // Try PATCH first (update existing row)
     const patch = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?key=eq.${SB_ROW_KEY}`, {
