@@ -371,54 +371,20 @@ select{cursor:pointer} select option{background:var(--s2)}
 <!-- DASHBOARD -->
 <div class="page active" id="page-dash">
   <div class="g2">
+    <!-- 1. Upcoming Deadlines (collapsible) -->
     <div class="card gfull">
-      <div class="ch"><div class="ct">Upcoming Deadlines & Exams</div><div class="badge" id="d-dc">—</div></div>
-      <div id="d-countdown"></div>
-    </div>
-    <div class="card" style="order:2">
-      <div class="ch"><div class="ct">Transfer Milestones</div><div class="badge" id="d-mb">—</div></div>
-      <div style="padding:9px 15px 5px">
-        <div class="pbar-row"><span>Progress</span><span id="d-mpct">0%</span></div>
-        <div class="pbar"><div class="pbar-fill" id="d-mbar" style="width:0%"></div></div>
-      </div>
-      <div id="d-milestones"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:14px;order:1">
-      <div class="card">
-        <div class="ch" style="border-bottom:none;padding:10px 15px">
-          <div class="ct">Sobriety</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1;color:var(--gold)" id="d-streak">0</span>
-            <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3)">days sober</span>
-            <button class="btn-ghost" onclick="go('sob')">Log →</button>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="ch"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
-        <div class="todo-input-row">
-          <input type="text" id="todo-input" placeholder="Add a task… e.g. Read Leg &amp; Reg pp. 269-86" onkeydown="if(event.key==='Enter')addTodo()">
-          <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="addTodo()">Add</button>
-        </div>
-        <div id="todo-list"></div>
-        <div id="todo-empty" class="empty">No tasks. Add something you need to do.</div>
-      </div>
-    </div>
-    </div>
-
-    <div class="card gfull" id="sched-wrap">
-      <div class="ch" style="cursor:pointer" onclick="toggleSched()">
-        <div class="ct">Today's Schedule</div>
+      <div class="ch" style="cursor:pointer" onclick="toggleDeadlines()">
+        <div class="ct">Upcoming Deadlines & Exams</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3)" id="sched-dow"></span>
-          <span id="sched-toggle" style="color:var(--t3);font-size:.7rem">▼</span>
+          <div class="badge" id="d-dc">—</div>
+          <span id="deadlines-toggle" style="color:var(--t3);font-size:.7rem">▼</span>
         </div>
       </div>
-      <div id="sched-body">
-        <div id="sched-grid" style="max-height:420px;overflow-y:auto;padding:0 8px"></div>
-        <div id="sched-due" style="padding:10px 15px;border-top:1px solid var(--b1)"></div>
+      <div id="d-countdown-wrap">
+        <div id="d-countdown"></div>
       </div>
     </div>
+    <!-- 2. Personal Calendar -->
     <div class="card gfull" id="evt-wrap">
       <div class="ch" style="cursor:pointer" onclick="toggleEvtCal()">
         <div class="ct">Personal Calendar</div>
@@ -447,6 +413,37 @@ select{cursor:pointer} select option{background:var(--s2)}
         </div>
       </div>
     </div>
+    <!-- 3. To-Do + Sobriety | Milestones -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="ch" style="border-bottom:none;padding:10px 15px">
+          <div class="ct">Sobriety</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1;color:var(--gold)" id="d-streak">0</span>
+            <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--t3)">days sober</span>
+            <button class="btn-ghost" onclick="go('sob')">Log →</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">To-Do</div><button class="btn-ghost" onclick="clearDoneTodos()" style="font-size:.58rem">Clear done</button></div>
+        <div class="todo-input-row">
+          <input type="text" id="todo-input" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addTodo()">
+          <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="addTodo()">Add</button>
+        </div>
+        <div id="todo-list"></div>
+        <div id="todo-empty" class="empty">No tasks. Add something you need to do.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Transfer Milestones</div><div class="badge" id="d-mb">—</div></div>
+      <div style="padding:9px 15px 5px">
+        <div class="pbar-row"><span>Progress</span><span id="d-mpct">0%</span></div>
+        <div class="pbar"><div class="pbar-fill" id="d-mbar" style="width:0%"></div></div>
+      </div>
+      <div id="d-milestones"></div>
+    </div>
+    <!-- 4. Notes -->
     <div class="card gfull">
       <div class="ch"><div class="ct">Notes</div></div>
       <textarea class="notes-ta" id="notes-ta" placeholder="Brain dump..."></textarea>
@@ -912,7 +909,7 @@ function toggleSched(){
 
 function defState() {
   return {
-    soberSince:null, logs:{}, hideCompletedItems:false, schedNotes:{}, schedCollapsed:false,
+    soberSince:null, logs:{}, hideCompletedItems:false, schedNotes:{}, schedCollapsed:false, deadlinesCollapsed:false, events:[], evtCalCollapsed:false,
     classes:JSON.parse(JSON.stringify(CLASS_SEED)),
     items:[...JSON.parse(JSON.stringify(ITEM_SEED)),...JSON.parse(JSON.stringify(READING_SEED))],
     milestones:JSON.parse(JSON.stringify(MS_DEF)),
@@ -1104,6 +1101,13 @@ function doneEvt(id) {
 
 let _evtCalYear, _evtCalMonth, _evtSelDay = null;
 
+
+function toggleDeadlines() {
+  S.deadlinesCollapsed = !S.deadlinesCollapsed;
+  save();
+  document.getElementById('d-countdown-wrap').style.display = S.deadlinesCollapsed ? 'none' : '';
+  document.getElementById('deadlines-toggle').textContent = S.deadlinesCollapsed ? '▶' : '▼';
+}
 function toggleEvtCal() {
   S.evtCalCollapsed = !S.evtCalCollapsed;
   save();
@@ -1243,6 +1247,12 @@ function renderNav() {
 //  DASHBOARD
 // ═══════════════════════════════════════════════════════
 function renderDash() {
+  // init collapsed states
+  const dw = document.getElementById('d-countdown-wrap');
+  if (dw) dw.style.display = S.deadlinesCollapsed ? 'none' : '';
+  const dt = document.getElementById('deadlines-toggle');
+  if (dt) dt.textContent = S.deadlinesCollapsed ? '▶' : '▼';
+
   const up = S.items.filter(i=>!i.done&&i.due).map(i=>({...i,d:daysUntil(i.due)})).filter(i=>i.d<=14).sort((a,b)=>a.d-b.d);
   const overdue=up.filter(i=>i.d<0).length;
   document.getElementById('d-dc').textContent = overdue>0?up.length+' items ('+overdue+' overdue)':up.length+' upcoming';
