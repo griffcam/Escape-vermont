@@ -989,6 +989,7 @@ async function loadFromSupabase() {
 }
 
 async function saveToSupabase() {
+  console.log('[saveToSupabase FIRED] S.events:', (S.events||[]).length, new Error().stack.split('\n')[1]);
   setSyncStatus('saving');
   // Only save user-generated state — never save seed data (classes/items/milestones structure)
   const toSave = {
@@ -1021,8 +1022,9 @@ async function saveToSupabase() {
       },
       body: JSON.stringify({ value })
     });
-    if (!patch.ok) throw new Error('patch failed');
+    if (!patch.ok) { const errText = await patch.text(); console.log('[PATCH FAILED]', patch.status, errText); throw new Error('patch failed'); }
     const patched = await patch.json();
+    console.log('[PATCH SUCCESS] rows updated:', patched?.length, 'events in payload:', (JSON.parse(value).events||[]).length);
     // If no rows were updated, insert a new one
     if (!patched || patched.length === 0) {
       const post = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
