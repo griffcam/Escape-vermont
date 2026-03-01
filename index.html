@@ -973,6 +973,11 @@ async function loadFromSupabase() {
       // Re-add user-created classes and items
       if (loaded.userClasses) S.classes = [...S.classes, ...loaded.userClasses];
       if (loaded.userItems) S.items = [...S.items, ...loaded.userItems];
+      if (loaded.events) S.events = loaded.events;
+      if (loaded.evtCalCollapsed !== undefined) S.evtCalCollapsed = loaded.evtCalCollapsed;
+      if (loaded.deadlinesCollapsed !== undefined) S.deadlinesCollapsed = loaded.deadlinesCollapsed;
+      if (loaded.hideCompletedItems !== undefined) S.hideCompletedItems = loaded.hideCompletedItems;
+      if (loaded.schedNotes) S.schedNotes = loaded.schedNotes;
     }
     setSyncStatus('ok');
   } catch(e) {
