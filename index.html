@@ -1090,9 +1090,10 @@ function addEvt() {
   const title = document.getElementById('evt-title').value.trim();
   const dt    = document.getElementById('evt-dt').value;
   const type  = document.getElementById('evt-type').value;
-  if (!title || !dt) return;
+  if (!title || !dt) { console.log('[addEvt] blocked - title:', title, 'dt:', dt); return; }
   const ev = { id: Date.now(), title, dt, type, done: false };
   (S.events = S.events || []).push(ev);
+  console.log('[addEvt] added event, S.events now:', S.events.length, JSON.stringify(ev));
   document.getElementById('evt-title').value = '';
   document.getElementById('evt-dt').value = '';
   save(); renderEvents();
