@@ -1007,6 +1007,11 @@ async function saveToSupabase() {
     // User-added classes and items (ids > 2000000 are user-created)
     userClasses: S.classes.filter(c => c.id > 2000000),
     userItems: S.items.filter(i => i.id > 2000000),
+    events: S.events || [],
+    evtCalCollapsed: S.evtCalCollapsed || false,
+    deadlinesCollapsed: S.deadlinesCollapsed || false,
+    hideCompletedItems: S.hideCompletedItems || false,
+    schedNotes: S.schedNotes || {},
   };
   console.log('[SAVE] events count:', (toSave.events||[]).length, 'sample:', JSON.stringify((toSave.events||[]).slice(0,1)));
   const value = JSON.stringify(toSave);
