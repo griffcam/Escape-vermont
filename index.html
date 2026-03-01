@@ -71,7 +71,57 @@ select{cursor:pointer} select option{background:var(--s2)}
 /* ── GRID ── */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .gfull{grid-column:1/-1}
-@media(max-width:640px){.g2{grid-template-columns:1fr}}
+@media(max-width:640px){
+  /* Layout */
+  .g2{grid-template-columns:1fr;display:flex;flex-direction:column}
+  .page{padding:10px 8px}
+
+  /* Nav — scrollable, bigger tap targets */
+  .nav{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .nav-tab{padding:10px 12px;font-size:.65rem;white-space:nowrap;min-width:64px}
+  .nav-brand{padding:8px 10px}
+  .nav-brand .nb1{font-size:.85rem}
+  .nav-brand .nb2{font-size:.5rem}
+  .ns-bar{gap:8px;padding:6px 10px}
+  .ns-item{font-size:.55rem}
+
+  /* Cards */
+  .card{margin-bottom:10px}
+  .ch{padding:10px 12px}
+
+  /* Deadlines widget */
+  .cd-item{padding:8px 12px;gap:10px}
+  .cd-num{font-size:1.1rem;min-width:44px}
+  .cd-name{font-size:.78rem}
+  .cd-sub{font-size:.62rem}
+
+  /* Milestones */
+  .mi{padding:9px 12px;font-size:.78rem}
+  .mdate{font-size:.62rem}
+  .sub-item{padding:7px 12px 7px 28px;font-size:.75rem}
+
+  /* To-do — bigger inputs and buttons */
+  .todo-input-row{padding:8px 10px;gap:8px}
+  .todo-input-row input{font-size:.85rem;padding:8px 10px}
+  .todo-input-row .btn{font-size:.8rem;padding:8px 14px}
+  .todo-item{padding:10px 12px;font-size:.82rem;min-height:42px}
+  .todo-check{width:20px;height:20px;min-width:20px}
+
+  /* Sobriety card */
+  #d-streak{font-size:1.8rem}
+
+  /* Schedule */
+  .sched-row{min-height:28px}
+  .sched-note-input{font-size:.8rem;padding:4px 8px}
+
+  /* Classes/academics */
+  .cls-hdr{padding:10px 12px;gap:8px;flex-wrap:wrap}
+  .cls-name{font-size:.82rem}
+  .cls-item{padding:9px 12px}
+
+  /* Jobs */
+  .job-row{padding:9px 12px;font-size:.78rem}
+}
 
 /* ── PROGRESS ── */
 .pbar-row{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3);margin-bottom:5px}
@@ -281,6 +331,15 @@ select{cursor:pointer} select option{background:var(--s2)}
 .todo-item[draggable="true"]:hover { background: rgba(255,255,255,.03); }
 .todo-drag-over { border-top: 2px solid var(--lime) !important; }
 
+
+.evt-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;margin-bottom:4px;background:var(--s2);transition:background .15s}
+.evt-row:hover{background:var(--s3)}
+.evt-done{opacity:.5}
+@media(max-width:640px){
+  #evt-main{grid-template-columns:1fr !important}
+  #evt-cal{border-right:none !important;border-bottom:1px solid var(--b1)}
+}
+
 </style>
 </head>
 <body>
@@ -316,7 +375,7 @@ select{cursor:pointer} select option{background:var(--s2)}
       <div class="ch"><div class="ct">Upcoming Deadlines & Exams</div><div class="badge" id="d-dc">—</div></div>
       <div id="d-countdown"></div>
     </div>
-    <div class="card">
+    <div class="card" style="order:2">
       <div class="ch"><div class="ct">Transfer Milestones</div><div class="badge" id="d-mb">—</div></div>
       <div style="padding:9px 15px 5px">
         <div class="pbar-row"><span>Progress</span><span id="d-mpct">0%</span></div>
@@ -324,7 +383,7 @@ select{cursor:pointer} select option{background:var(--s2)}
       </div>
       <div id="d-milestones"></div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;flex-direction:column;gap:14px;order:1">
       <div class="card">
         <div class="ch" style="border-bottom:none;padding:10px 15px">
           <div class="ct">Sobriety</div>
@@ -358,6 +417,34 @@ select{cursor:pointer} select option{background:var(--s2)}
       <div id="sched-body">
         <div id="sched-grid" style="max-height:420px;overflow-y:auto;padding:0 8px"></div>
         <div id="sched-due" style="padding:10px 15px;border-top:1px solid var(--b1)"></div>
+      </div>
+    </div>
+    <div class="card gfull" id="evt-wrap">
+      <div class="ch" style="cursor:pointer" onclick="toggleEvtCal()">
+        <div class="ct">Personal Calendar</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--t3)" id="evt-count-lbl">0 events</span>
+          <span id="evt-cal-toggle" style="color:var(--t3);font-size:.7rem">▼</span>
+        </div>
+      </div>
+      <div id="evt-body">
+        <!-- Quick add row -->
+        <div class="todo-input-row" style="flex-wrap:wrap;gap:8px;padding:10px 14px">
+          <input type="text" id="evt-title" placeholder="Event title…" style="flex:2;min-width:140px">
+          <input type="datetime-local" id="evt-dt" style="flex:1;min-width:140px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--t1);font-family:'DM Mono',monospace;font-size:.7rem;padding:6px 10px">
+          <select id="evt-type" style="background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--t1);font-family:'DM Mono',monospace;font-size:.7rem;padding:6px 10px">
+            <option value="general">General</option>
+            <option value="appt">Appointment</option>
+            <option value="social">Social</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="btn btn-lime" style="font-size:.72rem;padding:5px 14px" onclick="addEvt()">Add</button>
+        </div>
+        <!-- Mini calendar + upcoming list side by side -->
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:0;border-top:1px solid var(--b1)" id="evt-main">
+          <div id="evt-cal" style="padding:12px 14px;border-right:1px solid var(--b1);min-width:220px"></div>
+          <div id="evt-list" style="padding:10px 14px;overflow-y:auto;max-height:280px"></div>
+        </div>
       </div>
     </div>
     <div class="card gfull">
@@ -980,7 +1067,166 @@ function go(id) {
   renderAll();
 }
 
-function renderAll() { renderDash(); renderAcad(); renderSob(); renderWork(); renderJobs(); renderTodos(); renderNav(); }
+
+// ═══════════════════════════════════════════════════════
+//  PERSONAL CALENDAR / EVENTS
+// ═══════════════════════════════════════════════════════
+
+const EVT_COLORS = {
+  general: 'var(--lime)',
+  appt:    '#7ec8e3',
+  social:  '#f4a261',
+  admin:   '#c77dff'
+};
+const EVT_LABELS = { general:'General', appt:'Appointment', social:'Social', admin:'Admin' };
+
+function addEvt() {
+  const title = document.getElementById('evt-title').value.trim();
+  const dt    = document.getElementById('evt-dt').value;
+  const type  = document.getElementById('evt-type').value;
+  if (!title || !dt) return;
+  const ev = { id: Date.now(), title, dt, type, done: false };
+  (S.events = S.events || []).push(ev);
+  document.getElementById('evt-title').value = '';
+  document.getElementById('evt-dt').value = '';
+  save(); renderEvents();
+}
+
+function delEvt(id) {
+  S.events = (S.events||[]).filter(e=>e.id!==id);
+  save(); renderEvents();
+}
+
+function doneEvt(id) {
+  const ev = (S.events||[]).find(e=>e.id===id);
+  if (ev) { ev.done = !ev.done; save(); renderEvents(); }
+}
+
+let _evtCalYear, _evtCalMonth, _evtSelDay = null;
+
+function toggleEvtCal() {
+  S.evtCalCollapsed = !S.evtCalCollapsed;
+  save();
+  document.getElementById('evt-body').style.display = S.evtCalCollapsed ? 'none' : '';
+  document.getElementById('evt-cal-toggle').textContent = S.evtCalCollapsed ? '▶' : '▼';
+}
+
+function renderEvents() {
+  const now = new Date();
+  if (!_evtCalYear) { _evtCalYear = now.getFullYear(); _evtCalMonth = now.getMonth(); }
+
+  // update count label
+  const upcoming = (S.events||[]).filter(e=>!e.done && new Date(e.dt)>=now);
+  document.getElementById('evt-count-lbl').textContent = upcoming.length + ' upcoming';
+
+  // render mini calendar
+  renderEvtCal();
+
+  // render event list (filtered by selected day or all upcoming)
+  renderEvtList();
+
+  // collapsed state
+  document.getElementById('evt-body').style.display = S.evtCalCollapsed ? 'none' : '';
+  document.getElementById('evt-cal-toggle').textContent = S.evtCalCollapsed ? '▶' : '▼';
+}
+
+function renderEvtCal() {
+  const cal = document.getElementById('evt-cal');
+  const yr = _evtCalYear, mo = _evtCalMonth;
+  const firstDay = new Date(yr, mo, 1).getDay();
+  const daysInMonth = new Date(yr, mo+1, 0).getDate();
+  const today = new Date();
+  const evts = S.events || [];
+
+  // Build set of days that have events this month
+  const evtDays = new Set();
+  evts.forEach(e => {
+    const d = new Date(e.dt);
+    if (d.getFullYear()===yr && d.getMonth()===mo) evtDays.add(d.getDate());
+  });
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <button class="btn-ghost" style="padding:2px 8px" onclick="evtCalNav(-1)">‹</button>
+      <span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--t1)">${MONTHS[mo]} ${yr}</span>
+      <button class="btn-ghost" style="padding:2px 8px" onclick="evtCalNav(1)">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,28px);gap:2px;text-align:center">
+      ${DAYS.map(d=>`<div style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--t3);padding:2px 0">${d}</div>`).join('')}
+      ${Array(firstDay).fill('<div></div>').join('')}
+      ${Array.from({length:daysInMonth},(_,i)=>{
+        const day = i+1;
+        const isToday = day===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
+        const hasDot = evtDays.has(day);
+        const isSel = _evtSelDay===day && _evtCalMonth===mo && _evtCalYear===yr;
+        return `<div onclick="selectEvtDay(${day})" style="cursor:pointer;border-radius:50%;width:26px;height:26px;line-height:26px;font-family:'DM Mono',monospace;font-size:.65rem;
+          background:${isSel?'var(--lime)':isToday?'var(--s3)':'transparent'};
+          color:${isSel?'#0a0a0a':isToday?'var(--lime)':'var(--t1)'};
+          border:${isToday&&!isSel?'1px solid var(--lime)':'1px solid transparent'};
+          position:relative">
+          ${day}${hasDot?`<span style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:${isSel?'#0a0a0a':'var(--gold)'}"></span>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+    ${_evtSelDay?`<div style="margin-top:8px;text-align:center"><button class="btn-ghost" style="font-size:.6rem" onclick="clearEvtDay()">Show all ×</button></div>`:''}
+  `;
+  cal.innerHTML = html;
+}
+
+function evtCalNav(dir) {
+  _evtCalMonth += dir;
+  if (_evtCalMonth < 0) { _evtCalMonth = 11; _evtCalYear--; }
+  if (_evtCalMonth > 11) { _evtCalMonth = 0; _evtCalYear++; }
+  renderEvtCal();
+}
+
+function selectEvtDay(day) {
+  _evtSelDay = (_evtSelDay===day && _evtCalMonth===_evtCalYear) ? null : day;
+  renderEvtCal(); renderEvtList();
+}
+
+function clearEvtDay() { _evtSelDay = null; renderEvtCal(); renderEvtList(); }
+
+function renderEvtList() {
+  const listEl = document.getElementById('evt-list');
+  const now = new Date();
+  let evts = [...(S.events||[])].sort((a,b)=>new Date(a.dt)-new Date(b.dt));
+
+  if (_evtSelDay !== null) {
+    evts = evts.filter(e=>{
+      const d = new Date(e.dt);
+      return d.getDate()===_evtSelDay && d.getMonth()===_evtCalMonth && d.getFullYear()===_evtCalYear;
+    });
+  }
+
+  if (!evts.length) {
+    listEl.innerHTML = `<div class="empty" style="padding:20px 0">${_evtSelDay?'No events this day.':'No events yet.'}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = evts.map(e=>{
+    const d = new Date(e.dt);
+    const isPast = d < now && !e.done;
+    const color = EVT_COLORS[e.type] || EVT_COLORS.general;
+    const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',weekday:'short'});
+    const timeStr = d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    return `<div class="evt-row ${e.done?'evt-done':''}" style="border-left:3px solid ${color}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;color:${e.done?'var(--t3)':'var(--t1)'};text-decoration:${e.done?'line-through':'none'}">${esc(e.title)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:${isPast?'#ff6b6b':'var(--t3)'}">${dateStr} · ${timeStr} · <span style="color:${color}">${EVT_LABELS[e.type]||'General'}</span>${isPast?' · <span style="color:#ff6b6b">overdue</span>':''}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <button class="btn-ghost" style="font-size:.6rem;padding:2px 7px" onclick="doneEvt(${e.id})">${e.done?'↩':'✓'}</button>
+        <button class="btn-icon" onclick="delEvt(${e.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() { renderDash(); renderAcad(); renderSob(); renderWork(); renderJobs(); renderTodos(); renderEvents(); renderNav(); }
 
 function renderNav() {
   document.getElementById('ns-sob').textContent = sobDays();
