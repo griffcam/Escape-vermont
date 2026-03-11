@@ -456,7 +456,10 @@ select{cursor:pointer} select option{background:var(--s2)}
   <div class="card">
     <div class="ch">
       <div class="ct">Classes</div>
-      <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="openClsModal()">+ Add Class</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-ghost" id="hide-done-btn" style="font-size:.6rem" onclick="toggleHideDone()">Hide completed</button>
+        <button class="btn btn-lime" style="font-size:.72rem;padding:5px 11px" onclick="openClsModal()">+ Add Class</button>
+      </div>
     </div>
     <div id="cls-list"></div>
     <div id="cls-empty" class="empty" style="display:none">No classes yet.</div>
